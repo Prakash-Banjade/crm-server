@@ -9,23 +9,23 @@ export class Organization extends BaseEntity {
     @Column('text')
     name: string;
 
-    @Column('text')
+    @Column('text', { default: "" })
     address: string;
 
-    @Column('text')
+    @Column('text', { default: "" })
     concerningPersonName: string;
 
     @Index({ unique: true })
     @Column('text')
     email: string;
 
-    @Column('text')
+    @Column('text', { default: "" })
     contactNumber: string;
 
-    @Column('text')
+    @Column('text', { default: "" })
     vatNumber: string;
 
-    @Column('int')
+    @Column('int', { default: 0 })
     panNumber: number;
 
     // @OneToOne(() => File, { onDelete: 'CASCADE' })
@@ -36,25 +36,25 @@ export class Organization extends BaseEntity {
     // @JoinColumn({ name: 'registrationDocumentId' })
     // registrationDocument: File;
 
-    @Column('jsonb')
+    @Column('jsonb', { nullable: false })
     bankingDetails: OrganizationBankingDetail;
 
     // @OneToOne(() => File, { nullable: true, onDelete: 'CASCADE' })
     // @JoinColumn({ name: 'logo-id' })
     // logo: File;
 
-    @Column('text', { nullable: true })
+    @Column('text', { default: "" })
     brandColorPrimary: string;
 
-    @Column('text', { nullable: true })
+    @Column('text', { default: "" })
     brandColorSecondary: string;
 
-    @Column('text', { nullable: true })
-    websiteUrl?: string;
+    @Column('text', { default: "" })
+    websiteUrl: string;
 
     @OneToMany(() => Account, account => account.organization)
     accounts: Account[];
 
-    @ManyToOne(() => Account, account => account.createdOrganizations, { nullable: false, onDelete: 'RESTRICT' })
-    createdBy: Account;
+    @ManyToOne(() => Account, account => account.createdOrganizations, { nullable: true, onDelete: 'RESTRICT' })
+    createdBy: Account | null;
 }

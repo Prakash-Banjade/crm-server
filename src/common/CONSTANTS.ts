@@ -1,5 +1,6 @@
 export const enum Tokens {
     REFRESH_TOKEN_COOKIE_NAME = 'refresh_token',
+    ACCESS_TOKEN_COOKIE_NAME = 'access_token',
     SUDO_ACCESS_TOKEN_COOKIE_NAME = 'sudo_access_token',
 }
 

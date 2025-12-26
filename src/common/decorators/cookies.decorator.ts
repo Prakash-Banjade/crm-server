@@ -17,7 +17,7 @@ export const Cookies = createParamDecorator((data: string, ctx: ExecutionContext
 
 export const enum CookieKey {
     ORGANIZATION_ID = 'organizationId',
-    BRANCH_ID = 'branchId',
+    BRANCH_ID = 'organizationId',
     ACADEMIC_YEAR_ID = 'academicYearId',
 }
 

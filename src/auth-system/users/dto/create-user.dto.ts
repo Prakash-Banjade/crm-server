@@ -27,5 +27,5 @@ export class CreateUserDto {
     @ApiPropertyOptional({ format: 'uuid' })
     @IsUUID()
     @IsOptional()
-    branchId?: string; // there may not be any branch
+    organizationId?: string; // there may not be any organization
 }

@@ -36,8 +36,8 @@ export class QueryDto extends PageOptionsDto {
     @IsOptional()
     academicYearId?: string;
 
-    @ApiPropertyOptional({ type: "string", format: 'uuid', description: 'Branch id' })
+    @ApiPropertyOptional({ type: "string", format: 'uuid', description: 'Organization id' })
     @IsUUID()
     @IsOptional()
-    branchId?: string;
+    organizationId?: string;
 }

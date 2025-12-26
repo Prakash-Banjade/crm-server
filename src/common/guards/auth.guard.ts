@@ -3,7 +3,6 @@ import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { IS_PUBLIC_KEY } from "../decorators/setPublicRoute.decorator";
 import { FastifyRequest } from "fastify";
-import { Tokens } from "../CONSTANTS";
 import { EnvService } from "src/env/env.service";
 
 @Injectable()
@@ -23,14 +22,9 @@ export class AuthGuard implements CanActivate {
 
         const request = context.switchToHttp().getRequest<FastifyRequest>();
         const access_token = this.extractTokenFromHeader(request);
-        const refresh_token = this.extractRefreshTokenFromRequest(request);
 
-        if (!access_token || !refresh_token) throw new UnauthorizedException();
+        if (!access_token) throw new UnauthorizedException();
         try {
-            await this.jwtService.verifyAsync(refresh_token, {
-                secret: this.envService.REFRESH_TOKEN_SECRET,
-            })
-
             const payload = await this.jwtService.verifyAsync(access_token, {
                 secret: this.envService.ACCESS_TOKEN_SECRET,
             });
@@ -45,21 +39,5 @@ export class AuthGuard implements CanActivate {
     private extractTokenFromHeader(request: FastifyRequest): string | undefined {
         const [type, token] = request.headers.authorization?.split(' ') ?? [];
         return type === 'Bearer' ? token : undefined;
-    }
-
-    private extractRefreshTokenFromRequest(request: FastifyRequest): string | undefined {
-        const token: string | undefined = request.cookies[Tokens.REFRESH_TOKEN_COOKIE_NAME];
-
-        if (!token) {
-            throw new UnauthorizedException();
-        }
-
-        const { valid, value } = request.unsignCookie(token);
-
-        if (!valid) {
-            throw new UnauthorizedException();
-        }
-
-        return value;
     }
 }

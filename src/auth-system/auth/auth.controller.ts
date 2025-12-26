@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { type FastifyReply, type FastifyRequest } from 'fastify';
@@ -23,6 +23,17 @@ export class AuthController {
         private readonly authHelper: AuthHelper,
         private readonly auth2faHelper: Auth2faHelper,
     ) { }
+
+    @ApiOperation({ summary: 'Get current user details' })
+    @ApiResponse({ status: 200, description: 'User details retrieved successfully.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized.' })
+    @HttpCode(HttpStatus.OK)
+    @CheckAbilities({ subject: Role.USER, action: Action.READ })
+    @ApiBearerAuth()
+    @Get('me')
+    me(@CurrentUser() currentUser: AuthUser) {
+        return currentUser;
+    }
 
     @ApiOperation({ summary: 'Login a user' })
     @ApiResponse({ status: 200, description: 'User successfully logged in.' })

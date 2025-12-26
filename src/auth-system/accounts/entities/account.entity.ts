@@ -9,7 +9,7 @@ import { WebAuthnCredential } from "src/auth-system/webAuthn/entities/webAuthnCr
 import { LoginDevice } from "./login-devices.entity";
 import { getLowerCasedFullName } from "src/utils/utils";
 import { Image } from "src/file-management/images/entities/image.entity";
-import { Organization } from "src/auth-system/organizations/entities/organizatino.entity";
+import { Organization } from "src/auth-system/organizations/entities/organization.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -17,7 +17,7 @@ export class Account extends BaseEntity {
     firstName!: string;
 
     @Column({ type: 'text', default: '' })
-    lastName?: string;
+    lastName: string;
 
     @Index()
     @Column({ type: 'text' })

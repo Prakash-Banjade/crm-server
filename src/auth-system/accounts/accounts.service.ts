@@ -16,7 +16,7 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { WebAuthnCredential } from '../webAuthn/entities/webAuthnCredential.entity';
 import { type FastifyRequest } from 'fastify';
 import { UtilitiesService } from 'src/utilities/utilities.service';
-import { Organization } from '../organizations/entities/organizatino.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class AccountsService extends BaseRepository {
@@ -31,7 +31,7 @@ export class AccountsService extends BaseRepository {
   // // TODO: Actually the best approach would be to not create account directly, instead create EmailVerificationPending record, once verified then create account
   // // But in this app, if account is not created at first, then we student, teacher can't be created
   // async createAccount(entity: Teacher | Student | Staff, profileImage?: Image) {
-  //   const branchId = this.utilitiesService.getBranchId();
+  //   const organizationId = this.utilitiesService.getOrganizationId();
 
   //   // check for existing
   //   const existingAccount = await this.getRepository(Account).findOne({ where: { email: entity.email }, select: { id: true } });
@@ -58,7 +58,7 @@ export class AccountsService extends BaseRepository {
   //     profileImage: profileImage ?? null,
   //     password,
   //     prevPasswords: [bcrypt.hashSync(password, PASSWORD_SALT_COUNT)],
-  //     branch: await this.branchesService.getBranch(branchId),
+  //     organization: await this.organizationesService.getOrganization(organizationId),
   //   });
 
   //   account.setLowerCasedFullName();

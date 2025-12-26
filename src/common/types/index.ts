@@ -5,6 +5,10 @@ export type AuthUser = {
     role: Role
     deviceId: string;
     organizationId: string;
+    organizationName: string;
+    firstName: string;
+    lastName: string;
+    profileImage: string | null;
 }
 
 export enum Action {

@@ -167,7 +167,7 @@ export class WebAuthnService extends BaseRepository {
             .where('account.email = :email', { email: dto.email })
             .andWhere('account.verifiedAt IS NOT NULL')
             .leftJoin('account.webAuthnCredentials', 'webAuthnCredentials', 'webAuthnCredentials.credentialId = :credentialId', { credentialId: dto.authenticationResponse?.id })
-            .leftJoin('account.branch', 'branch')
+            .leftJoin('account.organization', 'organization')
             .leftJoin('account.profileImage', 'profileImage')
             .select([
                 'account.id',
@@ -182,8 +182,8 @@ export class WebAuthnService extends BaseRepository {
                 'webAuthnCredentials.publicKey',
                 'webAuthnCredentials.transports',
                 'webAuthnCredentials.counter',
-                'branch.id',
-                'branch.name',
+                'organization.id',
+                'organization.name',
                 'profileImage.id',
                 'profileImage.url',
             ]).getOne();
@@ -304,7 +304,7 @@ export class WebAuthnService extends BaseRepository {
             .where('account.email = :email', { email: dto.email })
             .andWhere('account.verifiedAt IS NOT NULL')
             .leftJoin('account.webAuthnCredentials', 'webAuthnCredentials', 'webAuthnCredentials.credentialId = :credentialId', { credentialId: dto.authenticationResponse?.id })
-            .leftJoin('account.branch', 'branch')
+            .leftJoin('account.organization', 'organization')
             .leftJoin('account.profileImage', 'profileImage')
             .select([
                 'account.id',
@@ -319,8 +319,8 @@ export class WebAuthnService extends BaseRepository {
                 'webAuthnCredentials.publicKey',
                 'webAuthnCredentials.transports',
                 'webAuthnCredentials.counter',
-                'branch.id',
-                'branch.name',
+                'organization.id',
+                'organization.name',
                 'profileImage.id',
                 'profileImage.url',
             ]).getOne();

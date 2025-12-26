@@ -71,16 +71,9 @@ export class AuthService extends BaseRepository {
 
     return reply
       .setCookie(Tokens.REFRESH_TOKEN_COOKIE_NAME, refresh_token, this.getRefreshCookieOptions())
+      .setCookie(Tokens.ACCESS_TOKEN_COOKIE_NAME, access_token, this.getAccessCookieOptions())
       .header('Content-Type', 'application/json')
-      .send({
-        access_token,
-        user: {
-          firstName: account.firstName,
-          lastName: account.lastName,
-          profileImageUrl: account.profileImage?.url,
-          branchName: account.organization?.name,
-        }
-      })
+      .send({ access_token })
   }
 
   async handleDevice(account: Account, req: FastifyRequest, method: 'password' | 'passkey' = 'password') {
@@ -139,6 +132,18 @@ export class AuthService extends BaseRepository {
       sameSite: this.envService.NODE_ENV === 'production' ? 'none' : 'lax',
       expires: new Date(Date.now() + (this.envService.REFRESH_TOKEN_EXPIRATION_SEC * 1000)),
       path: '/', // necessary to be able to access cookie from out of this route path context, like auth.guard.ts
+    }
+  }
+
+  getAccessCookieOptions(): CookieSerializeOptions {
+    return {
+      secure: this.envService.NODE_ENV === 'production',
+      httpOnly: true,
+      priority: 'high',
+      signed: false, // access_token is meant to be sent raw not signed, the frontend needs to decode it
+      sameSite: this.envService.NODE_ENV === 'production' ? 'none' : 'lax',
+      expires: new Date(Date.now() + (this.envService.ACCESS_TOKEN_EXPIRATION_SEC * 1000)),
+      path: '/',
     }
   }
 
@@ -245,7 +250,7 @@ export class AuthService extends BaseRepository {
           firstName: account.firstName,
           lastName: account.lastName,
           profileImageUrl: account.profileImage?.url,
-          branchName: account.organization?.name
+          organizationName: account.organization?.name
         }
       })
   }

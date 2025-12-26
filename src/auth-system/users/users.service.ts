@@ -20,13 +20,13 @@ export class UsersService extends BaseRepository {
     datasource: DataSource, @Inject(REQUEST) req: FastifyRequest,
     private readonly imagesService: ImagesService,
     private readonly accountsService: AccountsService,
-    // private readonly branchesService: BranchesService,
+    // private readonly organizationesService: OrganizationesService,
   ) { super(datasource, req) }
 
   // async create(createUserDto: CreateUserDto) {
-  //   const branch = await this.branchesService.getBranch(createUserDto.branchId);
+  //   const organization = await this.organizationesService.getOrganization(createUserDto.organizationId);
 
-  //   const account = await this.accountsService.createAdminAccount(branch, {
+  //   const account = await this.accountsService.createAdminAccount(organization, {
   //     email: createUserDto.email,
   //     firstName: createUserDto.firstName,
   //     lastName: createUserDto.lastName
@@ -49,11 +49,11 @@ export class UsersService extends BaseRepository {
       .offset(queryDto.skip)
       .limit(queryDto.take)
       .leftJoin("user.account", "account")
-      .leftJoin("account.branch", "branch")
+      .leftJoin("account.organization", "organization")
       .leftJoin("account.profileImage", "profileImage")
       .where(new Brackets(qb => {
         queryDto.search && qb.andWhere("LOWER(CONCAT(account.firstName, ' ', account.lastName)) LIKE :search", { search: `%${queryDto.search?.toLowerCase()?.replaceAll(' ', '%')}%` });
-        queryDto.branchId && qb.andWhere('branch.id = :branchId', { branchId: queryDto.branchId });
+        queryDto.organizationId && qb.andWhere('organization.id = :organizationId', { organizationId: queryDto.organizationId });
       }))
       .select([
         "user.id as id",
@@ -61,7 +61,7 @@ export class UsersService extends BaseRepository {
         "CONCAT(account.firstName, ' ', account.lastName) as fullName",
         "account.email as email",
         "account.role as role",
-        "branch.name as branchName",
+        "organization.name as organizationName",
       ])
 
     return paginatedRawData(queryDto, queryBuilder);
@@ -98,16 +98,16 @@ export class UsersService extends BaseRepository {
   async myDetails(currentUser: AuthUser) {
     return this.getRepository(Account).createQueryBuilder('account')
       .leftJoin('account.profileImage', 'profileImage')
-      .leftJoin('account.branch', 'branch')
+      .leftJoin('account.organization', 'organization')
       .where('account.id = :id', { id: currentUser.accountId })
       .select([
         'account.id as id',
         'account.email as email',
-        'account.firstName as firstName',
-        'account.lastName as lastName',
+        'account.firstName as "firstName"',
+        'account.lastName as "lastName"',
         'account.role as role',
-        'profileImage.url as profileImageUrl',
-        'branch.name as branchName',
+        'profileImage.url as "profileImageUrl"',
+        'organization.name as "organizationName"',
       ])
       .getRawOne();
   }

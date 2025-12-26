@@ -7,3 +7,13 @@ export type OrganizationBankingDetail = {
     benificiaryName: string;
     swiftCode?: string;
 }
+
+export const defaultBankingDetails: OrganizationBankingDetail = {
+    bankName: "",
+    bankLocation: "",
+    bankState: "",
+    bankCity: "",
+    accountNumber: "",
+    benificiaryName: "",
+    swiftCode: "",
+}
