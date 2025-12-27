@@ -17,7 +17,7 @@ export class QueryDto extends PageOptionsDto {
 
     @ApiPropertyOptional({ type: "string", description: "Search query", default: "" })
     @IsOptional()
-    search?: string
+    q?: string
 
     @ApiPropertyOptional({ type: Boolean, default: false, description: "Skip pagination flag" })
     @IsBoolean()

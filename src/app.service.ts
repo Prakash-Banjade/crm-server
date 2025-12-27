@@ -45,6 +45,7 @@ export class AppService {
       prevPasswords: [bcrypt.hashSync("Prakash@221", PASSWORD_SALT_COUNT)],
       user: userRepo.create({}),
       verifiedAt: new Date(),
+      organization,
     })
     account.setLowerCasedFullName();
     await accountRepo.save(account);

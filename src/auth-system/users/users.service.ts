@@ -52,7 +52,7 @@ export class UsersService extends BaseRepository {
       .leftJoin("account.organization", "organization")
       .leftJoin("account.profileImage", "profileImage")
       .where(new Brackets(qb => {
-        queryDto.search && qb.andWhere("LOWER(CONCAT(account.firstName, ' ', account.lastName)) LIKE :search", { search: `%${queryDto.search?.toLowerCase()?.replaceAll(' ', '%')}%` });
+        queryDto.q && qb.andWhere("LOWER(CONCAT(account.firstName, ' ', account.lastName)) LIKE :search", { search: `%${queryDto.q?.toLowerCase()?.replaceAll(' ', '%')}%` });
         queryDto.organizationId && qb.andWhere('organization.id = :organizationId', { organizationId: queryDto.organizationId });
       }))
       .select([

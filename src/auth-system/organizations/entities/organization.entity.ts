@@ -5,7 +5,7 @@ import { BaseEntity } from "src/common/entities/base.entity";
 
 @Entity()
 export class Organization extends BaseEntity {
-    @Index()
+    @Index({ unique: true })
     @Column('text')
     name: string;
 
@@ -25,8 +25,8 @@ export class Organization extends BaseEntity {
     @Column('text', { default: "" })
     vatNumber: string;
 
-    @Column('int', { default: 0 })
-    panNumber: number;
+    @Column('text', { default: "" })
+    panNumber: string;
 
     // @OneToOne(() => File, { onDelete: 'CASCADE' })
     // @JoinColumn({ name: 'panCertificate' })
@@ -57,4 +57,7 @@ export class Organization extends BaseEntity {
 
     @ManyToOne(() => Account, account => account.createdOrganizations, { nullable: true, onDelete: 'RESTRICT' })
     createdBy: Account | null;
+
+    @Column({ type: 'timestamp', nullable: true })
+    blackListedAt: Date | null;
 }

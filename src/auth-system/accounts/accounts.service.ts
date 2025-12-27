@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, FindOptionsSelect } from 'typeorm';
 import { Account } from './entities/account.entity';
 import { REQUEST } from '@nestjs/core';
 import { BaseRepository } from 'src/common/repository/base-repository';
@@ -194,5 +194,14 @@ export class AccountsService extends BaseRepository {
     await this.getRepository(Account).save(account);
 
     return;
+  }
+
+  async getOrThrow(
+    id: string,
+    select: FindOptionsSelect<Account> = { id: true }
+  ) {
+    const account = await this.getRepository(Account).findOne({ where: { id }, select });
+    if (!account) throw new NotFoundException('No associated account found');
+    return account;
   }
 }
