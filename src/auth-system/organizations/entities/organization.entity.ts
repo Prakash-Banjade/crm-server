@@ -59,5 +59,5 @@ export class Organization extends BaseEntity {
     createdBy: Account | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    blackListedAt: Date | null;
+    blacklistedAt: Date | null;
 }

@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID, Matches } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEmail, IsNotEmpty, IsString, IsUUID, Matches } from "class-validator";
 import { NAME_REGEX, NAME_WITH_SPACE_REGEX } from "src/common/CONSTANTS";
 
 export class CreateUserDto {
@@ -24,8 +24,7 @@ export class CreateUserDto {
     })
     lastName: string;
 
-    @ApiPropertyOptional({ format: 'uuid' })
+    @ApiProperty({ format: 'uuid' })
     @IsUUID()
-    @IsOptional()
-    organizationId?: string; // there may not be any organization
+    organizationId: string;
 }

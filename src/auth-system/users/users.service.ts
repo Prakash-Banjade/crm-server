@@ -8,11 +8,12 @@ import { UsersQueryDto } from './dto/user-query.dto';
 import { paginatedRawData } from 'src/utils/paginatedData';
 import { User } from './entities/user.entity';
 import { userSelectCols } from './helpers/user-select-cols';
-import { AuthUser } from 'src/common/types';
+import { AuthUser, Role } from 'src/common/types';
 import { Account } from '../accounts/entities/account.entity';
 import { ImagesService } from 'src/file-management/images/images.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AccountsService } from '../accounts/accounts.service';
+import { OrganizationsService } from '../organizations/organizations.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BaseRepository {
@@ -20,29 +21,31 @@ export class UsersService extends BaseRepository {
     datasource: DataSource, @Inject(REQUEST) req: FastifyRequest,
     private readonly imagesService: ImagesService,
     private readonly accountsService: AccountsService,
-    // private readonly organizationesService: OrganizationesService,
+    private readonly organizationsService: OrganizationsService,
   ) { super(datasource, req) }
 
-  // async create(createUserDto: CreateUserDto) {
-  //   const organization = await this.organizationesService.getOrganization(createUserDto.organizationId);
+  async create(createUserDto: CreateUserDto) {
+    const organization = await this.organizationsService.getOrganization(createUserDto.organizationId, { id: true });
 
-  //   const account = await this.accountsService.createAdminAccount(organization, {
-  //     email: createUserDto.email,
-  //     firstName: createUserDto.firstName,
-  //     lastName: createUserDto.lastName
-  //   });
+    const account = await this.accountsService.createAdminAccount(organization, {
+      email: createUserDto.email,
+      firstName: createUserDto.firstName,
+      lastName: createUserDto.lastName
+    });
 
-  //   const user = this.getRepository(User).create({
-  //     account,
-  //   });
+    const user = this.getRepository(User).create({
+      account,
+    });
 
-  //   await this.getRepository(User).save(user);
+    await this.getRepository(User).save(user);
 
-  //   return { message: 'Admin created' }
-  // }
+    return { message: 'Admin created' }
+  }
 
-  async findAll(queryDto: UsersQueryDto) {
+  async findAll(queryDto: UsersQueryDto, currentUser: AuthUser) {
     const queryBuilder = this.getRepository(User).createQueryBuilder('user');
+
+    const organizationId = currentUser.role === Role.SUPER_ADMIN ? queryDto.organizationId : currentUser.organizationId;
 
     queryBuilder
       .orderBy("user.createdAt", queryDto.order)
@@ -52,16 +55,16 @@ export class UsersService extends BaseRepository {
       .leftJoin("account.organization", "organization")
       .leftJoin("account.profileImage", "profileImage")
       .where(new Brackets(qb => {
-        queryDto.q && qb.andWhere("LOWER(CONCAT(account.firstName, ' ', account.lastName)) LIKE :search", { search: `%${queryDto.q?.toLowerCase()?.replaceAll(' ', '%')}%` });
-        queryDto.organizationId && qb.andWhere('organization.id = :organizationId', { organizationId: queryDto.organizationId });
+        queryDto.q && qb.andWhere("account.lowerCasedFullName ILIKE :search", { search: `${queryDto.q}%` });
+        organizationId && qb.andWhere('organization.id = :organizationId', { organizationId });
       }))
       .select([
-        "user.id as id",
-        "profileImage.url as profileImageUrl",
-        "CONCAT(account.firstName, ' ', account.lastName) as fullName",
-        "account.email as email",
-        "account.role as role",
-        "organization.name as organizationName",
+        'user.id as userId',
+        'profileImage.url as "profileImageUrl"',
+        'account.lowerCasedFullName as "fullName"',
+        'account.email as email',
+        'account.role as role',
+        'user.createdAt as "createdAt"',
       ])
 
     return paginatedRawData(queryDto, queryBuilder);

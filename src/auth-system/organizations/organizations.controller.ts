@@ -6,6 +6,7 @@ import { CheckAbilities } from 'src/common/decorators/abilities.decorator';
 import { Action, type AuthUser, Role } from 'src/common/types';
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto/organization.dto';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
+import { OrganizationQueryDto } from './dto/organization-query.dto';
 
 @ApiBearerAuth()
 @ApiTags('Organizations')
@@ -27,7 +28,7 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Get all organizations' })
   @ApiOkResponse({ description: 'Successfully received organizations' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
-  findAll(@Query() queryDto: QueryDto) {
+  findAll(@Query() queryDto: OrganizationQueryDto) {
     return this.organizationsService.findAll(queryDto);
   }
 
@@ -46,6 +47,15 @@ export class OrganizationsController {
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.organizationsService.findOne(id);
+  }
+
+  @Patch(':id/toggle-block')
+  @ApiOperation({ summary: 'Toggle block organization by id' })
+  @ApiOkResponse({ description: 'Successfully toggled block organization' })
+  @ApiNotFoundResponse({ description: 'Organization not found' })
+  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.UPDATE })
+  toggleBlock(@Param('id', ParseUUIDPipe) id: string) {
+    return this.organizationsService.toggleBlock(id);
   }
 
   @Patch(':id')

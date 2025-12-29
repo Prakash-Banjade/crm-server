@@ -15,18 +15,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
-  // @Post()
-  // @ApiOperation({ summary: 'Create a new user, particularly ADMIN' })
-  // @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.CREATE })
-  // @UseInterceptors(TransactionInterceptor)
-  // create(@Body() createUserDto: CreateUserDto) {
-  //   return this.usersService.create(createUserDto);
-  // }
+  @Post()
+  @ApiOperation({ summary: 'Create a new user, particularly ADMIN' })
+  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.CREATE })
+  @UseInterceptors(TransactionInterceptor)
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
 
   @Get()
-  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
-  findAll(@Query() queryDto: UsersQueryDto) {
-    return this.usersService.findAll(queryDto);
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.READ })
+  findAll(@Query() queryDto: UsersQueryDto, @CurrentUser() currentUser: AuthUser) {
+    return this.usersService.findAll(queryDto, currentUser);
   }
 
   @Get('me')

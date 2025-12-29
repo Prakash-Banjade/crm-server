@@ -28,8 +28,8 @@ export class AccountsService extends BaseRepository {
     private readonly utilitiesService: UtilitiesService
   ) { super(dataSource, req) }
 
-  // // TODO: Actually the best approach would be to not create account directly, instead create EmailVerificationPending record, once verified then create account
-  // // But in this app, if account is not created at first, then we student, teacher can't be created
+  // TODO: Actually the best approach would be to not create account directly, instead create EmailVerificationPending record, once verified then create account
+  // But in this app, if account is not created at first, then we student, teacher can't be created
   // async createAccount(entity: Teacher | Student | Staff, profileImage?: Image) {
   //   const organizationId = this.utilitiesService.getOrganizationId();
 
