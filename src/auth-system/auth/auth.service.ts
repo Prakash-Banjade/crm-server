@@ -208,14 +208,14 @@ export class AuthService extends BaseRepository {
 
     const account = await this.getRepository(Account).findOne({
       where: { id: req.accountId },
-      relations: { organization: true, profileImage: true },
+      relations: { organization: true },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
         role: true,
-        profileImage: { url: true },
+        profileImage: true,
         organization: { id: true, name: true } // necessary for jwt access token
       },
     }); // accountId is validated in the refresh token guard

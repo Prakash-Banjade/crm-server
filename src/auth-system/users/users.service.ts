@@ -10,7 +10,6 @@ import { User } from './entities/user.entity';
 import { userSelectCols } from './helpers/user-select-cols';
 import { AuthUser, Role } from 'src/common/types';
 import { Account } from '../accounts/entities/account.entity';
-import { ImagesService } from 'src/file-management/images/images.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AccountsService } from '../accounts/accounts.service';
 import { OrganizationsService } from '../organizations/organizations.service';
@@ -19,7 +18,6 @@ import { OrganizationsService } from '../organizations/organizations.service';
 export class UsersService extends BaseRepository {
   constructor(
     datasource: DataSource, @Inject(REQUEST) req: FastifyRequest,
-    private readonly imagesService: ImagesService,
     private readonly accountsService: AccountsService,
     private readonly organizationsService: OrganizationsService,
   ) { super(datasource, req) }
@@ -53,15 +51,14 @@ export class UsersService extends BaseRepository {
       .limit(queryDto.take)
       .leftJoin("user.account", "account")
       .leftJoin("account.organization", "organization")
-      .leftJoin("account.profileImage", "profileImage")
       .where(new Brackets(qb => {
         queryDto.q && qb.andWhere("account.lowerCasedFullName ILIKE :search", { search: `${queryDto.q}%` });
         organizationId && qb.andWhere('organization.id = :organizationId', { organizationId });
       }))
       .select([
         'user.id as "userId"',
-        'profileImage.url as "profileImageUrl"',
         'account.lowerCasedFullName as "fullName"',
+        'account.profileImage as "profileImage"',
         'account.email as email',
         'account.role as role',
         'user.createdAt as "createdAt"',
@@ -100,7 +97,6 @@ export class UsersService extends BaseRepository {
 
   async myDetails(currentUser: AuthUser) {
     return this.getRepository(Account).createQueryBuilder('account')
-      .leftJoin('account.profileImage', 'profileImage')
       .leftJoin('account.organization', 'organization')
       .where('account.id = :id', { id: currentUser.accountId })
       .select([
@@ -108,8 +104,8 @@ export class UsersService extends BaseRepository {
         'account.email as email',
         'account.firstName as "firstName"',
         'account.lastName as "lastName"',
+        'account.profileImage as "profileImage"',
         'account.role as role',
-        'profileImage.url as "profileImageUrl"',
         'organization.name as "organizationName"',
       ])
       .getRawOne();
@@ -119,20 +115,19 @@ export class UsersService extends BaseRepository {
     const existingUser = await this.getUserByAccountId(currentUser.accountId);
     const existingAccount = await this.getRepository(Account).findOne({
       where: { id: currentUser.accountId },
-      relations: { profileImage: true },
       select: {
         id: true,
         firstName: true,
         lastName: true,
-        profileImage: { id: true },
+        profileImage: true,
         verifiedAt: true
       }
     });
     if (!existingAccount) throw new InternalServerErrorException('Unable to update the associated profile. Please contact support.');
 
-    const profileImage = (updateUserDto.profileImageId && (existingAccount.profileImage?.id !== updateUserDto.profileImageId || !existingAccount.profileImage))
-      ? await this.imagesService.findOne(updateUserDto.profileImageId)
-      : existingAccount.profileImage;
+    // const profileImage = (updateUserDto.profileImageId && (existingAccount.profileImage?.id !== updateUserDto.profileImageId || !existingAccount.profileImage))
+    //   ? await this.imagesService.findOne(updateUserDto.profileImageId)
+    //   : existingAccount.profileImage;
 
     // update user
     Object.assign(existingUser, {
@@ -144,7 +139,7 @@ export class UsersService extends BaseRepository {
     Object.assign(existingAccount, {
       firstName: updateUserDto.firstName || existingAccount.firstName,
       lastName: updateUserDto.lastName || existingAccount.lastName,
-      profileImage
+      // profileImage
     })
 
     await this.getRepository(Account).save(existingAccount);

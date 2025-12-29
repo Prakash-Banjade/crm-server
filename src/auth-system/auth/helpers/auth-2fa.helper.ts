@@ -72,7 +72,7 @@ export class Auth2faHelper extends BaseRepository {
 
         const account = await this.getRepository(Account).findOne({
             where: { email: foundRequest.email, verifiedAt: Not(IsNull()) },
-            relations: { organization: true, profileImage: true },
+            relations: { organization: true },
             select: {
                 id: true,
                 email: true,
@@ -81,7 +81,7 @@ export class Auth2faHelper extends BaseRepository {
                 role: true,
                 twoFaEnabledAt: true,
                 organization: { id: true, name: true },
-                profileImage: { url: true }
+                profileImage: true
             }
         });
         if (!account) throw new UnauthorizedException('Invalid email');

@@ -10,8 +10,6 @@ import { PASSWORD_SALT_COUNT } from 'src/common/CONSTANTS';
 import { AuthHelper } from '../auth/helpers/auth.helper';
 import { RefreshTokenService } from '../auth/helpers/refresh-tokens.service';
 import { LoginDevice } from './entities/login-devices.entity';
-import { Image } from 'src/file-management/images/entities/image.entity';
-import { ImagesService } from 'src/file-management/images/images.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { WebAuthnCredential } from '../webAuthn/entities/webAuthnCredential.entity';
 import { type FastifyRequest } from 'fastify';
@@ -24,7 +22,6 @@ export class AccountsService extends BaseRepository {
     dataSource: DataSource, @Inject(REQUEST) req: FastifyRequest,
     private readonly authHelper: AuthHelper,
     private readonly refreshTokenService: RefreshTokenService,
-    private readonly imagesService: ImagesService,
     private readonly utilitiesService: UtilitiesService
   ) { super(dataSource, req) }
 
@@ -100,14 +97,10 @@ export class AccountsService extends BaseRepository {
   async update(id: string, dto: UpdateAccountDto) {
     const account = await this.getRepository(Account).findOne({
       where: { id },
-      relations: { profileImage: true },
-      select: { id: true, firstName: true, lastName: true, verifiedAt: true, profileImage: { id: true } }
+      select: { id: true, firstName: true, lastName: true, verifiedAt: true, profileImage: true }
     });
 
     if (!account) throw new NotFoundException('No associated account found');
-
-    const image = await this.imagesService.update(account.profileImage?.id, dto.profileImageId);
-    if (image !== undefined) account.profileImage = image;
 
     Object.assign(account, dto)
 

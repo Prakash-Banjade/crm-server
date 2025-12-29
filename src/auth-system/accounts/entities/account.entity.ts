@@ -8,7 +8,6 @@ import { BCRYPT_HASH, EMAIL_REGEX, PASSWORD_SALT_COUNT } from "src/common/CONSTA
 import { WebAuthnCredential } from "src/auth-system/webAuthn/entities/webAuthnCredential.entity";
 import { LoginDevice } from "./login-devices.entity";
 import { getLowerCasedFullName } from "src/utils/utils";
-import { Image } from "src/file-management/images/entities/image.entity";
 import { Organization } from "src/auth-system/organizations/entities/organization.entity";
 
 @Entity()
@@ -69,11 +68,8 @@ export class Account extends BaseEntity {
         if (this.email && !EMAIL_REGEX.test(this.email)) throw new BadRequestException('Invalid email');
     }
 
-    @OneToOne(() => Image, image => image.account_profileImage, { nullable: true })
-    profileImage: Image | null;
-
-    @OneToMany(() => Image, image => image.uploadedBy)
-    images: Image[];
+    @Column({ type: 'text', nullable: true })
+    profileImage: string | null;
 
     /**
      * Organization to which the account belongs

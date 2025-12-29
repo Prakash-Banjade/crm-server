@@ -7,7 +7,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './db/database.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { AuthSystemModule } from './auth-system/auth-system.module';
-import { FileManagementModule } from './file-management/file-management.module';
 import { EnvModule } from './env/env.module';
 import { MailModule } from './mail/mail.module';
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
@@ -18,6 +17,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { MinioModule } from './minio/minio.module';
 
 @Module({
   imports: [
@@ -52,8 +52,19 @@ import { join } from 'path';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'wwwroot'),
     }),
+    MinioModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        endPoint: configService.getOrThrow('MINIO_ENDPOINT'),
+        port: parseInt(configService.getOrThrow('MINIO_PORT')),
+        useSSL: configService.get('MINIO_USE_SSL') === 'true',
+        accessKey: configService.getOrThrow('MINIO_ACCESS_KEY'),
+        secretKey: configService.getOrThrow('MINIO_SECRET_KEY'),
+        bucket: configService.getOrThrow('MINIO_BUCKET_PRIMARY'),
+      }),
+    }),
     UtilitiesModule,
-    FileManagementModule,
     AuthSystemModule,
     MailModule,
   ],

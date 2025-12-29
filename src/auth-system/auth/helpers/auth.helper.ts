@@ -168,8 +168,8 @@ export class AuthHelper extends BaseRepository {
     async validateAccount(email: string, password: string): Promise<Account | { message: string }> {
         const foundAccount = await this.datasource.getRepository(Account).findOne({
             where: { email },
-            relations: { organization: true, profileImage: true },
-            select: { organization: { id: true, name: true }, profileImage: { url: true } },
+            relations: { organization: true },
+            select: { organization: { id: true, name: true }, profileImage: true },
         });
 
         if (!foundAccount) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS);

@@ -28,7 +28,11 @@ async function bootstrap() {
 
   // configService.get('NODE_ENV') === 'production' && app.register(fastifyHelmet);
   app.register(fastifyCsrfProtection, { cookieOpts: { signed: true } });
-  app.register(multipart);
+  app.register(multipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10 MB limit
+    },
+  });
 
   app.register(fastifyCors, {
     credentials: true,
