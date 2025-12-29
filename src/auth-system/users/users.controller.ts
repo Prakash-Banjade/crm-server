@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param, Delete, Query, UseInterceptors, Post } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, Query, UseInterceptors, Post, ParseUUIDPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersQueryDto } from './dto/user-query.dto';
@@ -24,7 +24,7 @@ export class UsersController {
   }
 
   @Get()
-  @CheckAbilities({ subject: Role.ADMIN, action: Action.READ })
+  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
   findAll(@Query() queryDto: UsersQueryDto, @CurrentUser() currentUser: AuthUser) {
     return this.usersService.findAll(queryDto, currentUser);
   }
@@ -35,7 +35,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
@@ -48,7 +48,7 @@ export class UsersController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a user, particularly ADMIN' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.DELETE })
-  delete(@Param('id') id: string) {
+  delete(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.delete(id);
   }
 

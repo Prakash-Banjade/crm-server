@@ -59,7 +59,7 @@ export class UsersService extends BaseRepository {
         organizationId && qb.andWhere('organization.id = :organizationId', { organizationId });
       }))
       .select([
-        'user.id as userId',
+        'user.id as "userId"',
         'profileImage.url as "profileImageUrl"',
         'account.lowerCasedFullName as "fullName"',
         'account.email as email',

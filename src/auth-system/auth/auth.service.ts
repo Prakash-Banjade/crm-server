@@ -243,16 +243,9 @@ export class AuthService extends BaseRepository {
 
     return reply
       .setCookie(Tokens.REFRESH_TOKEN_COOKIE_NAME, refresh_token, this.getRefreshCookieOptions())
+      .setCookie(Tokens.ACCESS_TOKEN_COOKIE_NAME, access_token, this.getAccessCookieOptions())
       .header('Content-Type', 'application/json')
-      .send({
-        access_token,
-        user: {
-          firstName: account.firstName,
-          lastName: account.lastName,
-          profileImageUrl: account.profileImage?.url,
-          organizationName: account.organization?.name
-        }
-      })
+      .send({ access_token })
   }
 
   async logout(reply: FastifyReply) {

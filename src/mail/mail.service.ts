@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { emailConfig, ITemplates } from './mail-service.config';
+import { ITemplates } from './mail-service.config';
 import { readFileSync } from 'fs';
 import * as nodemailer from 'nodemailer';
 import Handlebars from 'handlebars';
@@ -27,8 +27,21 @@ export class MailService {
     private readonly templates: ITemplates;
 
     constructor(private readonly configService: ConfigService) {
-        this.transport = createTransport(emailConfig);
-        this.email = `"SMS Backend" <${emailConfig.auth.user}>`;
+        const mailHost = this.configService.get<string>('MAIL_OUTGOING_SERVER');
+        const mailPort = this.configService.get<number>('MAIL_SMTP_PORT');
+        const mailUser = this.configService.get<string>('MAIL_USERNAME');
+        const mailPass = this.configService.get<string>('MAIL_PASSWORD');
+
+        this.transport = createTransport({
+            host: mailHost,
+            port: mailPort,
+            secure: mailPort === 465,
+            auth: {
+                user: mailUser,
+                pass: mailPass,
+            },
+        });
+        this.email = `"Abhyam CRM" <${mailUser}>`;
         this.domain = this.configService.get('CLIENT_URL')!;
 
         this.templates = {
