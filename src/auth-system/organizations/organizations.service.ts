@@ -38,9 +38,9 @@ export class OrganizationsService {
 
         const newOrganization = this.organizationRepo.create({
             ...dto,
-            logo: logo?.url,
-            panCertificate: panCertificate?.url,
-            registrationDocument: registrationDocument?.url,
+            logo,
+            panCertificate,
+            registrationDocument,
             createdBy: account,
         });
 
@@ -90,7 +90,7 @@ export class OrganizationsService {
     async update(id: string, dto: UpdateOrganizationDto) {
         const existing = await this.organizationRepo.findOne({
             where: { id },
-            select: { id: true, name: true, email: true }
+            select: { id: true, name: true, email: true, logo: true, panCertificate: true, registrationDocument: true }
         });
         if (!existing) throw new NotFoundException('Organization not found')
 
@@ -103,6 +103,24 @@ export class OrganizationsService {
             select: { id: true }
         });
         if (existingWithSameName && existingWithSameName.id !== id) throw new ConflictException('Duplicate Organization name or email found')
+
+        if (dto.logo && (dto.logo !== existing.logo || !existing.logo)) {
+            existing.logo && await this.minioService.deleteFile(existing.logo);
+            const logo = await this.minioService.moveFileToPermanent(dto.logo);
+            dto.logo = logo;
+        }
+
+        if (dto.panCertificate && (dto.panCertificate !== existing.panCertificate || !existing.panCertificate)) {
+            existing.panCertificate && await this.minioService.deleteFile(existing.panCertificate);
+            const logo = await this.minioService.moveFileToPermanent(dto.panCertificate);
+            dto.panCertificate = logo;
+        }
+
+        if (dto.registrationDocument && (dto.registrationDocument !== existing.registrationDocument || !existing.registrationDocument)) {
+            existing.registrationDocument && await this.minioService.deleteFile(existing.registrationDocument);
+            const logo = await this.minioService.moveFileToPermanent(dto.registrationDocument);
+            dto.registrationDocument = logo;
+        }
 
         Object.assign(existing, dto);
 
@@ -133,7 +151,19 @@ export class OrganizationsService {
     }
 
     async delete(id: string) {
+        const existing = await this.organizationRepo.findOne({ where: { id }, select: { id: true, logo: true, panCertificate: true, registrationDocument: true } });
+        if (!existing) throw new NotFoundException('Organization not found')
+
+        // delete files from minio
+        await Promise.all([
+            existing.logo && this.minioService.deleteFile(existing.logo),
+            existing.panCertificate && this.minioService.deleteFile(existing.panCertificate),
+            existing.registrationDocument && this.minioService.deleteFile(existing.registrationDocument),
+        ])
+
+        // delete organization from db
         await this.organizationRepo.delete({ id });
+
         return { message: 'Organization deleted' }
     }
 }

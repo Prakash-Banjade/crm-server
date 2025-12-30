@@ -38,3 +38,8 @@ export enum EFileMimeType {
     Audio = 'audio/mpeg',
     MP4 = 'video/mp4',
 }
+
+export interface IRichText {
+    html: string;
+    json: any
+}

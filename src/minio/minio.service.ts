@@ -189,7 +189,7 @@ export class MinioService {
      * @param tempKey The temporary key of the file
      * @param folder The folder to move the file to
      */
-    async moveFileToPermanent(tempKeyOrUrl: string, folder: string = ''): Promise<{ key: string, url: string }> {
+    async moveFileToPermanent(tempKeyOrUrl: string, folder: string = ''): Promise<string> {
         // 1. Extract the key if a full URL was passed
         // This removes everything up to and including the bucket name
         const tempKey = tempKeyOrUrl.includes(this.bucket)
@@ -214,10 +214,7 @@ export class MinioService {
             );
 
             await this.minioClient.removeObject(this.bucket, tempKey);
-            return {
-                key: permanentKey,
-                url: this.getPublicUrl(permanentKey)
-            };
+            return permanentKey;
         } catch (error) {
             this.logger.error(`Move failed: ${error.message}`);
             throw new InternalServerErrorException('Could not move file');

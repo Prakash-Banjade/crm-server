@@ -99,17 +99,17 @@ export class CreateOrganizationDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsMinioUrl()
+    @IsString()
     logo?: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsMinioUrl()
+    @IsString()
     panCertificate?: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsMinioUrl()
+    @IsString()
     registrationDocument?: string;
 }
 

@@ -18,6 +18,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MinioModule } from './minio/minio.module';
+import { RegionalInchargesModule } from './regional-incharges/regional-incharges.module';
+import { CountriesModule } from './countries/countries.module';
+import { UniversitiesModule } from './universities/universities.module';
 
 @Module({
   imports: [
@@ -67,6 +70,9 @@ import { MinioModule } from './minio/minio.module';
     UtilitiesModule,
     AuthSystemModule,
     MailModule,
+    RegionalInchargesModule,
+    CountriesModule,
+    UniversitiesModule,
   ],
   controllers: [AppController],
   providers: [
