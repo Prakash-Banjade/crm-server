@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator";
 import { NAME_REGEX, NAME_WITH_SPACE_REGEX } from "src/common/CONSTANTS";
-import { IsUuidOrUrl } from "src/common/decorators/validators/isUrlOrUUid.decorator";
+import { IsMinioUrl } from "src/common/decorators/validators/isMinioUrl";
 
 export class UpdateAccountDto {
     @ApiPropertyOptional({ type: "string", description: 'Student first name' })
@@ -28,7 +28,7 @@ export class UpdateAccountDto {
     email?: string;
 
     @ApiPropertyOptional({ type: "string", description: 'Image ID/URL' })
-    @IsUuidOrUrl()
+    @IsMinioUrl()
     @IsOptional()
     profileImageId?: string | null;
 

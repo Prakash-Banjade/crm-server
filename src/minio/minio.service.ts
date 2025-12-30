@@ -159,7 +159,7 @@ export class MinioService {
         const { endPoint, port, useSSL } = this.options;
         const protocol = useSSL ? 'https' : 'http';
         // Handle localhost vs standard domain
-        const host = endPoint === 'minio' || endPoint === 'localhost' ? `localhost:${port}` : endPoint;
+        const host = endPoint === '127.0.0.1' ? `127.0.0.1:${port}` : endPoint;
         return `${protocol}://${host}/${this.bucket}/${filename}`;
     }
 
@@ -189,27 +189,38 @@ export class MinioService {
      * @param tempKey The temporary key of the file
      * @param folder The folder to move the file to
      */
-    async moveFileToPermanent(tempKey: string, folder: string = ''): Promise<string> {
-        // 1. Define the new permanent path
+    async moveFileToPermanent(tempKeyOrUrl: string, folder: string = ''): Promise<{ key: string, url: string }> {
+        // 1. Extract the key if a full URL was passed
+        // This removes everything up to and including the bucket name
+        const tempKey = tempKeyOrUrl.includes(this.bucket)
+            ? tempKeyOrUrl.split(`${this.bucket}/`)[1]
+            : tempKeyOrUrl;
+
+        // 2. Define the new permanent path
         const fileNameOnly = tempKey.split('/').pop();
-        const permanentKey = `${folder ? folder : ""}/${fileNameOnly}`;
+
+        if (!fileNameOnly) throw new BadRequestException('Invalid file name');
+
+        // Ensure folder doesn't start or end with extra slashes
+        const sanitizedFolder = folder.replace(/^\/+|\/+$/g, '');
+        const permanentKey = sanitizedFolder ? `${sanitizedFolder}/${fileNameOnly}` : fileNameOnly;
 
         try {
-            // 2. Copy the object to the new location
-            // Note: source path must include the bucket name: "/bucketname/temp/file.jpg"
+            // Copy using the relative keys only
             await this.minioClient.copyObject(
                 this.bucket,
                 permanentKey,
-                `/${this.bucket}/${tempKey}`
+                `/${this.bucket}/${tempKey}` // Source MUST start with /bucket/key
             );
 
-            // 3. Delete the original temp file
             await this.minioClient.removeObject(this.bucket, tempKey);
-
-            return permanentKey;
+            return {
+                key: permanentKey,
+                url: this.getPublicUrl(permanentKey)
+            };
         } catch (error) {
-            this.logger.error(`Failed to move file: ${error.message}`);
-            throw new InternalServerErrorException('Could not finalize file upload');
+            this.logger.error(`Move failed: ${error.message}`);
+            throw new InternalServerErrorException('Could not move file');
         }
     }
 

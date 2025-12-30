@@ -169,7 +169,17 @@ export class AuthHelper extends BaseRepository {
         const foundAccount = await this.datasource.getRepository(Account).findOne({
             where: { email },
             relations: { organization: true },
-            select: { organization: { id: true, name: true }, profileImage: true },
+            select: {
+                id: true,
+                email: true,
+                password: true,
+                verifiedAt: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                organization: { id: true, name: true },
+                profileImage: true
+            },
         });
 
         if (!foundAccount) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS);

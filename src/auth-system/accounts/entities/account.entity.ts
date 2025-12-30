@@ -55,7 +55,7 @@ export class Account extends BaseEntity {
     twoFaEnabledAt: Date | null;
 
     @OneToOne(() => User, user => user.account, { nullable: true, cascade: true })
-    user: User;
+    user: User | null;
 
     @BeforeInsert()
     hashPassword() {

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Organization } from './entities/organization.entity';
 import { FindOptionsSelect, ILike, Repository } from 'typeorm';
@@ -8,12 +8,15 @@ import { AuthUser } from 'src/common/types';
 import { AccountsService } from '../accounts/accounts.service';
 import { paginatedRawData } from 'src/utils/paginatedData';
 import { OrganizationQueryDto } from './dto/organization-query.dto';
+import { MinioService } from 'src/minio/minio.service';
 
 @Injectable()
 export class OrganizationsService {
+
     constructor(
         @InjectRepository(Organization) private readonly organizationRepo: Repository<Organization>,
         private readonly accountsService: AccountsService,
+        private readonly minioService: MinioService
     ) { }
 
     async create(dto: CreateOrganizationDto, currentUser: AuthUser) {
@@ -27,8 +30,17 @@ export class OrganizationsService {
 
         const account = await this.accountsService.getOrThrow(currentUser.accountId);
 
+        const [logo, panCertificate, registrationDocument] = await Promise.all([
+            dto.logo ? this.minioService.moveFileToPermanent(dto.logo) : null,
+            dto.panCertificate ? this.minioService.moveFileToPermanent(dto.panCertificate) : null,
+            dto.registrationDocument ? this.minioService.moveFileToPermanent(dto.registrationDocument) : null,
+        ]);
+
         const newOrganization = this.organizationRepo.create({
             ...dto,
+            logo: logo?.url,
+            panCertificate: panCertificate?.url,
+            registrationDocument: registrationDocument?.url,
             createdBy: account,
         });
 
