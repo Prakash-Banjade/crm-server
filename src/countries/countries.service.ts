@@ -86,7 +86,7 @@ export class CountriesService {
   async findOne(id: string) {
     const country = await this.countryRepository.findOne({
       where: { id },
-      select: { id: true, name: true, states: true, createdAt: true }
+      select: { id: true, name: true, flag: true, states: true, createdAt: true }
     });
 
     if (!country) throw new NotFoundException("Country not found");

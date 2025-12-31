@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import * as path from 'path';
 import { MINIO_OPTIONS } from './minio.constants';
 import { BufferedFile, UploadedFileResponse, type MinioModuleOptions } from './minio.interface';
+import { generateSlug } from 'src/utils/generateSlug';
 
 
 @Injectable()
@@ -69,10 +70,9 @@ export class MinioService {
     async uploadFile(file: BufferedFile, folder: string = 'temp'): Promise<UploadedFileResponse> {
         if (!file) throw new BadRequestException('File is required');
 
-        const timestamp = Date.now();
         const hash = crypto.randomBytes(8).toString('hex');
         const extension = path.extname(file.originalname);
-        const filename = `${folder ? folder + '/' : ''}${timestamp}-${hash}${extension}`;
+        const filename = `${folder ? folder + '/' : ''}${generateSlug(file.originalname.split('.')[0])}-${hash}${extension}`;
 
         try {
             await this.minioClient.putObject(

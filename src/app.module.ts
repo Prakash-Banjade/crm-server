@@ -21,6 +21,9 @@ import { MinioModule } from './minio/minio.module';
 import { RegionalInchargesModule } from './regional-incharges/regional-incharges.module';
 import { CountriesModule } from './countries/countries.module';
 import { UniversitiesModule } from './universities/universities.module';
+import { CourseSystemModule } from './course-system/course-system.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { LearningResourcesModule } from './learning-resources/learning-resources.module';
 
 @Module({
   imports: [
@@ -73,6 +76,9 @@ import { UniversitiesModule } from './universities/universities.module';
     RegionalInchargesModule,
     CountriesModule,
     UniversitiesModule,
+    CourseSystemModule,
+    BookingsModule,
+    LearningResourcesModule,
   ],
   controllers: [AppController],
   providers: [

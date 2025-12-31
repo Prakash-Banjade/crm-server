@@ -1,7 +1,8 @@
 import { BaseEntity } from "src/common/entities/base.entity";
 import { type IRichText } from "src/common/types";
 import { Country } from "src/countries/entities/country.entity";
-import { Column, Entity, Index, ManyToOne } from "typeorm";
+import { Course } from "src/course-system/courses/entities/course.entity";
+import { Column, Entity, Index, ManyToOne, OneToMany } from "typeorm";
 
 @Entity()
 export class University extends BaseEntity {
@@ -21,4 +22,7 @@ export class University extends BaseEntity {
 
     @Column("jsonb")
     description: IRichText;
+
+    @OneToMany(() => Course, course => course.university)
+    courses: Course[]
 }

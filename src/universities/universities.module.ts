@@ -12,5 +12,6 @@ import { CountriesModule } from 'src/countries/countries.module';
   ],
   controllers: [UniversitiesController],
   providers: [UniversitiesService],
+  exports: [UniversitiesService],
 })
 export class UniversitiesModule { }

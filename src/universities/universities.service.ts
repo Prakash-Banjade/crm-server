@@ -3,7 +3,7 @@ import { CreateUniversityDto } from './dto/create-university.dto';
 import { UpdateUniversityDto } from './dto/update-university.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { University } from './entities/university.entity';
-import { ILike, Not, Repository } from 'typeorm';
+import { FindOptionsSelect, ILike, Not, Repository } from 'typeorm';
 import paginatedData, { paginatedRawData } from 'src/utils/paginatedData';
 import { UniversityQueryDto } from './dto/university-query.dto';
 import { CountriesService } from 'src/countries/countries.service';
@@ -88,13 +88,13 @@ export class UniversitiesService {
     return paginatedRawData(queryDto, queryBuilder);
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, select?: FindOptionsSelect<University>) {
     const university = await this.universityRepository.findOne({
       where: { id },
       relations: {
         country: true,
       },
-      select: {
+      select: select ?? {
         id: true,
         name: true,
         description: true,
