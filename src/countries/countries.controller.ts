@@ -33,6 +33,12 @@ export class CountriesController {
     return this.countriesService.getOptions(queryDto);
   }
 
+  @Get('states/:countryId')
+  @ApiOperation({ summary: 'Get states of a country' })
+  getStates(@Param('countryId', ParseUUIDPipe) countryId: string) {
+    return this.countriesService.getStates(countryId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a country by id' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })

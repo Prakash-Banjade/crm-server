@@ -9,6 +9,7 @@ export class University extends BaseEntity {
     @Column("text")
     name: string;
 
+    @Index()
     @ManyToOne(() => Country, (country) => country.universities, { onDelete: 'CASCADE', nullable: false })
     country: Country
 

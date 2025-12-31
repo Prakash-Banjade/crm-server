@@ -47,13 +47,16 @@ export class UniversitiesService {
       queryBuilder.andWhere("university.name ILIKE :q", { q: `${queryDto.q}%` });
     }
 
+    if (queryDto.countryId) {
+      queryBuilder.andWhere("country.id = :countryId", { countryId: queryDto.countryId });
+    }
+
     queryBuilder.select([
       "university.id",
       "university.name",
       "university.description",
       "country.id",
       "country.name",
-      "country.states",
       "country.flag",
       "university.state",
       "university.commission",
@@ -71,6 +74,10 @@ export class UniversitiesService {
 
     if (queryDto.q) {
       queryBuilder.andWhere("university.name ILIKE :q", { q: `${queryDto.q}%` });
+    }
+
+    if (queryDto.countryId) {
+      queryBuilder.andWhere("country.id = :countryId", { countryId: queryDto.countryId });
     }
 
     queryBuilder.select([

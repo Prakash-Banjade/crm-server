@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString, IsUUID } from "class-validator";
 import { QueryDto } from "src/common/dto/query.dto";
 
 const sortBy = {
@@ -14,4 +14,9 @@ export class UniversityQueryDto extends QueryDto {
     @IsOptional()
     @Transform(({ value }) => sortBy[value] || sortBy.createdAt)
     sortBy: string = sortBy.createdAt;
+
+    @ApiPropertyOptional({ type: String })
+    @IsUUID()
+    @IsOptional()
+    countryId?: string;
 }

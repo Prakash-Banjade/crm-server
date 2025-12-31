@@ -71,10 +71,16 @@ export class CountriesService {
       "country.id as value",
       "country.name as label",
       "country.flag as image",
-      "country.states as states",
     ]);
 
     return paginatedRawData(queryDto, queryBuilder);
+  }
+
+  getStates(countryId: string) {
+    return this.countryRepository.findOne({
+      where: { id: countryId },
+      select: { states: true }
+    });
   }
 
   async findOne(id: string) {
