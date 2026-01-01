@@ -11,6 +11,7 @@ import { getLowerCasedFullName } from "src/utils/utils";
 import { Organization } from "src/auth-system/organizations/entities/organization.entity";
 import { Counselor } from "src/counselors/entities/counselor.entity";
 import { Bde } from "src/bde/entities/bde.entity";
+import { Student } from "src/students/entities/student.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -90,4 +91,10 @@ export class Account extends BaseEntity {
 
     @OneToOne(() => Bde, bde => bde.account, { nullable: true, cascade: true })
     bde: Bde | null;
+
+    @OneToMany(() => Student, student => student.assignedTo)
+    assignedStudents: Student[];
+
+    @OneToMany(() => Student, student => student.createdBy)
+    createdStudents: Student[];
 }

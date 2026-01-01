@@ -130,9 +130,12 @@ export class OrganizationsService {
         return queryBuilder.getRawMany();
     }
 
-    async update(id: string, dto: UpdateOrganizationDto) {
+    async update(id: string, dto: UpdateOrganizationDto, currentUser: AuthUser) {
         const existing = await this.organizationRepo.findOne({
-            where: { id },
+            where: {
+                id,
+                createdBy: { id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.accountId }
+            },
             select: { id: true, name: true, email: true, logo: true, panCertificate: true, registrationDocument: true }
         });
         if (!existing) throw new NotFoundException('Organization not found')

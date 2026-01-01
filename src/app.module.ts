@@ -26,6 +26,8 @@ import { BookingsModule } from './bookings/bookings.module';
 import { LearningResourcesModule } from './learning-resources/learning-resources.module';
 import { CounselorsModule } from './counselors/counselors.module';
 import { BdeModule } from './bde/bde.module';
+import { StudentsModule } from './students/students.module';
+import { ApplicationsModule } from './applications/applications.module';
 
 @Module({
   imports: [
@@ -83,6 +85,8 @@ import { BdeModule } from './bde/bde.module';
     LearningResourcesModule,
     CounselorsModule,
     BdeModule,
+    StudentsModule,
+    ApplicationsModule,
   ],
   controllers: [AppController],
   providers: [

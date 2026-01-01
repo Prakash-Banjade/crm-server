@@ -1,3 +1,4 @@
+import { ELevelOfEducation } from "src/students/interface";
 
 export type AuthUser = {
     accountId: string;
@@ -42,6 +43,21 @@ export enum EFileMimeType {
 export interface IRichText {
     html: string;
     json: any
+}
+
+export enum EGender {
+    Male = 'male',
+    Female = 'female',
+    Other = 'other',
+}
+
+export enum EMaritalStatus {
+    Married = 'married',
+    Unmarried = 'unmarried',
+    Divorced = 'divorced',
+    Widowed = 'widowed',
+    Separated = 'separated',
+    Other = 'other',
 }
 
 export enum ECommissionStatus {
@@ -108,13 +124,6 @@ export enum EMonth {
     OCTOBER = 'october',
     NOVEMBER = 'november',
     DECEMBER = 'december',
-}
-
-export enum ELevelOfEducation {
-    POSTGRADUATE = 'postgraduate',
-    UNDERGRADUATE = 'undergraduate',
-    GRADETWELVE = 'grade12',
-    GRADETEN = 'grade10',
 }
 
 export const programLevelByLevelOfEducation = {
