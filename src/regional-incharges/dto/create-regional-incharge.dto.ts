@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString } from "class-validator";
 
 export class CreateRegionalInchargeDto {
     @ApiProperty()
@@ -12,8 +12,7 @@ export class CreateRegionalInchargeDto {
     email: string;
 
     @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
+    @IsPhoneNumber(undefined, { message: "Invalid phone number. Remember to use country code" })
     phone: string;
 
     @ApiPropertyOptional()

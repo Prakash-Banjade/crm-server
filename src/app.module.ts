@@ -24,6 +24,8 @@ import { UniversitiesModule } from './universities/universities.module';
 import { CourseSystemModule } from './course-system/course-system.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { LearningResourcesModule } from './learning-resources/learning-resources.module';
+import { CounselorsModule } from './counselors/counselors.module';
+import { BdeModule } from './bde/bde.module';
 
 @Module({
   imports: [
@@ -79,6 +81,8 @@ import { LearningResourcesModule } from './learning-resources/learning-resources
     CourseSystemModule,
     BookingsModule,
     LearningResourcesModule,
+    CounselorsModule,
+    BdeModule,
   ],
   controllers: [AppController],
   providers: [

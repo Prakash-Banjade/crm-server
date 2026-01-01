@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsEnum, IsNotEmpty, IsPhoneNumber, IsString, IsUUID, Matches, MaxLength } from "class-validator";
+import { IsEmail, IsEnum, IsNotEmpty, IsPhoneNumber, IsString, Matches, MaxLength } from "class-validator";
 import { NAME_WITH_SPACE_REGEX } from "src/common/CONSTANTS";
 import { IsDateOfBirth } from "src/common/decorators/validators/isDateOfBrith.decorator";
 import { IsFutureDate } from "src/common/decorators/validators/isFutureDate.decorator";
@@ -34,7 +34,7 @@ export class CreateBookingDto {
     location: string;
 
     @ApiProperty()
-    @IsPhoneNumber()
+    @IsPhoneNumber(undefined, { message: "Invalid phone number. Remember to use country code" })
     phNo: string;
 
     @ApiProperty()

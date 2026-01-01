@@ -9,7 +9,7 @@ import { join } from 'path';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ConfirmationMailEventDto, ResetPasswordMailEventDto, TwoFAMailEventDto, UserCredentialsEventDto } from './dto/events.dto';
 import Mail from 'nodemailer/lib/mailer';
-import { thisSchool } from 'src/common/CONSTANTS';
+import { thisCRM } from 'src/common/CONSTANTS';
 import { ConfigService } from '@nestjs/config';
 
 export enum MailEvents {
@@ -87,9 +87,9 @@ export class MailService {
             ...dto,
             link: `${this.domain}/auth/confirm-email/${dto.token}`,
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(dto.receiverEmail, subject, html);
     }
@@ -100,9 +100,9 @@ export class MailService {
         const html = this.templates.userCredentials({
             ...dto,
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(dto.email, subject, html);
     }
@@ -115,9 +115,9 @@ export class MailService {
             name: receiverName,
             resetLink: `${this.domain}/auth/reset-password/${dto.token}`,
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(
             receiverEmail,
@@ -133,9 +133,9 @@ export class MailService {
             ...dto,
             otp: dto.otp.toString(),
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(dto.receiverEmail, subject, html);
     }

@@ -31,6 +31,7 @@ export const MAX_BOOK_ISSUE_LIMIT = 5 as const;
 export const WEAK_PERCENTAGE_THRESHOLD = 50 as const;
 
 export const MAX_RECENT_DAYS = 7 as const;
+export const DEFAULT_ORGANIZATION_NAME = "Default" as const;
 
 export const CHARGE_HEADS = {
     admissionFee: "Admission Fee",
@@ -46,9 +47,9 @@ export const enum CACHE_KEYS {
     CAY_ID = 'currentAcademicYearId'
 }
 
-export const thisSchool = {
-    name: 'Aayam Global SMS',
-    address: 'Kalikanagar-11, Butwal',
+export const thisCRM = {
+    name: 'Abhyam CRM',
+    address: 'Milan Chowk, Butwal',
     phone: '071415272',
-    logo: 'https://tscapis.e-aribt.com/uploads/Aayam%20Global%20School%20Logo-01-1cb6f8.png',
+    logo: 'https://tscapis.e-aribt.com/uploads/Abhyam%20CRM%20Logo-01-1cb6f8.png',
 } as const;

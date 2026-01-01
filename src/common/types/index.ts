@@ -4,7 +4,7 @@ export type AuthUser = {
     email: string;
     role: Role
     deviceId: string;
-    organizationId: string;
+    organizationId: string | undefined;
     organizationName: string;
     firstName: string;
     lastName: string;

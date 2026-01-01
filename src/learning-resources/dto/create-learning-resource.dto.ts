@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
 
 export class CreateLearningResourceDto {
     @ApiProperty({ type: String, description: 'Title of the learning resource' })
@@ -10,6 +10,7 @@ export class CreateLearningResourceDto {
     @ApiPropertyOptional({ type: String, description: 'Description of the learning resource' })
     @IsString()
     @IsOptional()
+    @MaxLength(1000, { message: 'Description must be at most 1000 characters' })
     description?: string;
 
     @ApiPropertyOptional({ type: 'string', description: 'Parent Id of the learning resource' })

@@ -28,16 +28,16 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Get all organizations' })
   @ApiOkResponse({ description: 'Successfully received organizations' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
-  findAll(@Query() queryDto: OrganizationQueryDto) {
-    return this.organizationsService.findAll(queryDto);
+  findAll(@Query() queryDto: OrganizationQueryDto, @CurrentUser() currentUser: AuthUser) {
+    return this.organizationsService.findAll(queryDto, currentUser);
   }
 
   @Get('options')
   @ApiOperation({ summary: 'Get all organizations options' })
   @ApiOkResponse({ description: 'Successfully received organizations options' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
-  getOptions(@Query() queryDto: QueryDto) {
-    return this.organizationsService.getOptions(queryDto);
+  getOptions(@Query() queryDto: OrganizationQueryDto, @CurrentUser() currentUser: AuthUser) {
+    return this.organizationsService.getOptions(queryDto, currentUser);
   }
 
   @Get(':id')

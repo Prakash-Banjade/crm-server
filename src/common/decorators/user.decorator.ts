@@ -1,14 +1,16 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { CookieKey } from './cookies.decorator';
+import { Role } from '../types';
 
 export const CurrentUser = createParamDecorator(
     (data: unknown, ctx: ExecutionContext) => {
         const request = ctx.switchToHttp().getRequest<FastifyRequest>();
-        const organizationId = request?.user?.organizationId ?? request.cookies[CookieKey.ORGANIZATION_ID];
+        const user = request.user;
 
-        const user = { ...request.user, organizationId };
+        // for super admin, organizationId will be fetched from cookie
+        const organizationId = user?.role === Role.SUPER_ADMIN ? request.cookies[CookieKey.ORGANIZATION_ID] : user?.organizationId;
 
-        return user;
+        return { ...user, organizationId };
     },
 );

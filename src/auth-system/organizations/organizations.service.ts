@@ -4,7 +4,7 @@ import { Organization } from './entities/organization.entity';
 import { FindOptionsSelect, ILike, Repository } from 'typeorm';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto/organization.dto';
-import { AuthUser } from 'src/common/types';
+import { AuthUser, Role } from 'src/common/types';
 import { AccountsService } from '../accounts/accounts.service';
 import { paginatedRawData } from 'src/utils/paginatedData';
 import { OrganizationQueryDto } from './dto/organization-query.dto';
@@ -49,42 +49,85 @@ export class OrganizationsService {
         return { message: 'Organization created successfully' }
     }
 
-    async findAll(queryDto: OrganizationQueryDto) {
-        const querybuilder = this.organizationRepo.createQueryBuilder('organization')
+    async findAll(queryDto: OrganizationQueryDto, currentUser: AuthUser) {
+        const createdById = currentUser.role === Role.SUPER_ADMIN
+            ? queryDto.createdById
+            : currentUser.accountId;
+
+        const queryBuilder = this.organizationRepo.createQueryBuilder('organization')
             .orderBy(queryDto.sortBy, queryDto.order)
             .offset(queryDto.skip)
             .limit(queryDto.take)
-            .leftJoin('organization.createdBy', 'createdBy')
-            .select([
-                'organization.id as id',
-                'organization.name as name',
-                'organization.contactNumber as "contactNumber"',
-                'organization.email as email',
-                'organization.concerningPersonName as "concerningPersonName"',
-                'createdBy.lowerCasedFullName as "createdBy"',
-                'organization.blacklistedAt as "blacklistedAt"',
-                'organization.createdAt as "createdAt"',
-                'organization.updatedAt as "updatedAt"',
-            ]);
+            .leftJoin('organization.createdBy', 'createdBy');
 
-        return paginatedRawData(queryDto, querybuilder);
+        if (createdById) {
+            queryBuilder.andWhere('createdBy.id = :createdById', { createdById });
+        }
+
+        queryBuilder.select([
+            'organization.id as id',
+            'organization.name as name',
+            'organization.contactNumber as "contactNumber"',
+            'organization.email as email',
+            'organization.concerningPersonName as "concerningPersonName"',
+            'createdBy.lowerCasedFullName as "createdBy"',
+            'organization.blacklistedAt as "blacklistedAt"',
+            'organization.createdAt as "createdAt"',
+            'organization.updatedAt as "updatedAt"',
+        ]);
+
+        return paginatedRawData(queryDto, queryBuilder);
     }
 
-    async findOne(id: string) {
-        const existing = await this.organizationRepo.findOne({ where: { id } });
+    async findOne(id: string, select?: FindOptionsSelect<Organization>) {
+        const existing = await this.organizationRepo.findOne({
+            where: { id },
+            select: select ?? {
+                id: true,
+                name: true,
+                contactNumber: true,
+                email: true,
+                concerningPersonName: true,
+                createdAt: true,
+                updatedAt: true,
+                blacklistedAt: true,
+                createdBy: true,
+                logo: true,
+                panCertificate: true,
+                registrationDocument: true,
+                address: true,
+                bankingDetails: true,
+                brandColorPrimary: true,
+                brandColorSecondary: true,
+                websiteUrl: true,
+                panNumber: true,
+                vatNumber: true,
+            }
+        });
+
         if (!existing) throw new NotFoundException('Organization not found')
 
         return existing;
     }
 
-    getOptions(queryDto: QueryDto) {
-        return this.organizationRepo.createQueryBuilder('organization')
+    getOptions(queryDto: OrganizationQueryDto, currentUser: AuthUser) {
+        const createdById = currentUser.role === Role.SUPER_ADMIN
+            ? queryDto.createdById
+            : currentUser.accountId;
+
+        const queryBuilder = this.organizationRepo.createQueryBuilder('organization')
             .orderBy("organization.createdAt", queryDto.order)
+            .leftJoin('organization.createdBy', 'createdBy')
             .select([
                 "organization.id as value",
                 "organization.name as label"
             ])
-            .getRawMany();
+
+        if (createdById) {
+            queryBuilder.andWhere('createdBy.id = :createdById', { createdById });
+        }
+
+        return queryBuilder.getRawMany();
     }
 
     async update(id: string, dto: UpdateOrganizationDto) {

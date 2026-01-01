@@ -4,19 +4,14 @@ import { IsOptional, IsString } from "class-validator";
 import { QueryDto } from "src/common/dto/query.dto";
 
 const sortBy = {
-    name: "organization.name",
-    createdAt: "organization.createdAt",
+    name: "account.lowerCasedFullName",
+    createdAt: "bde.createdAt",
 }
 
-export class OrganizationQueryDto extends QueryDto {
-    @ApiPropertyOptional()
+export class BdesQueryDto extends QueryDto {
+    @ApiPropertyOptional({ enum: sortBy, default: sortBy.createdAt })
     @IsString()
     @IsOptional()
     @Transform(({ value }) => sortBy[value] || sortBy.createdAt)
     sortBy: string = sortBy.createdAt;
-
-    @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
-    createdById?: string;
 }

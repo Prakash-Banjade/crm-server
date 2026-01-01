@@ -9,6 +9,8 @@ import { WebAuthnCredential } from "src/auth-system/webAuthn/entities/webAuthnCr
 import { LoginDevice } from "./login-devices.entity";
 import { getLowerCasedFullName } from "src/utils/utils";
 import { Organization } from "src/auth-system/organizations/entities/organization.entity";
+import { Counselor } from "src/counselors/entities/counselor.entity";
+import { Bde } from "src/bde/entities/bde.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -79,4 +81,13 @@ export class Account extends BaseEntity {
 
     @OneToMany(() => Organization, organization => organization.createdBy)
     createdOrganizations: Organization[];
+
+    @OneToOne(() => Counselor, counselor => counselor.account, { nullable: true, cascade: true })
+    counselor: Counselor | null;
+
+    @OneToMany(() => Counselor, counselor => counselor.createdBy)
+    createdCounselors: Counselor[];
+
+    @OneToOne(() => Bde, bde => bde.account, { nullable: true, cascade: true })
+    bde: Bde | null;
 }

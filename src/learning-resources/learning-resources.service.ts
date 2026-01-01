@@ -3,7 +3,7 @@ import { Brackets, FindOptionsSelect, Repository } from "typeorm";
 import { LearningResource } from "./entities/learning-resource.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CreateLearningResourceDto } from "./dto/create-learning-resource.dto";
-import { paginatedRawData } from "src/utils/paginatedData";
+import paginatedData, { paginatedRawData } from "src/utils/paginatedData";
 import { LearningResourceQueryDto } from "./dto/learning-resource-query.dto";
 import { UpdateLearningResourceDto } from "./dto/update-learning-resource.dto";
 import { MinioService } from "src/minio/minio.service";
@@ -38,8 +38,9 @@ export class LearningResourcesService {
   async findAll(queryDto: LearningResourceQueryDto) {
     const queryBuilder = this.learningResourcesRepo.createQueryBuilder('lr')
       .orderBy('lr.createdAt', queryDto.order)
-      .offset(queryDto.skip)
-      .limit(queryDto.take)
+      .skip(queryDto.skip)
+      .take(queryDto.take)
+      .leftJoin('lr.parent', 'parent')
       .where(new Brackets(qb => {
         queryDto.q && qb.andWhere('lr.title ILIKE :search', { search: `${queryDto.q}%` })
         queryDto.parentId
@@ -47,18 +48,42 @@ export class LearningResourcesService {
           : qb.andWhere('lr.parentId IS NULL')
       }))
       .select([
-        'lr.id as id',
-        'lr.title as title',
-        'lr.createdAt as createdAt',
+        'lr.id',
+        'lr.title',
+        'lr.description',
+        'lr.parentId',
+        'lr.files',
+        'lr.createdAt',
+        'parent.id',
       ])
 
-    return paginatedRawData(queryDto, queryBuilder);
+    return paginatedData(queryDto, queryBuilder);
   }
 
   async findOne(id: string, select?: FindOptionsSelect<LearningResource>) {
     const resource = await this.learningResourcesRepo.findOne({
       where: { id },
-      select: select ?? { id: true, title: true, description: true, files: true, createdAt: true }
+      relations: {
+        parent: true,
+        children: true,
+      },
+      select: select ?? {
+        id: true,
+        title: true,
+        description: true,
+        files: true,
+        createdAt: true,
+        parent: {
+          id: true,
+        },
+        children: {
+          id: true,
+          title: true,
+          description: true,
+          files: true,
+          createdAt: true,
+        }
+      }
     });
 
     if (!resource) throw new NotFoundException('Resource not found');
