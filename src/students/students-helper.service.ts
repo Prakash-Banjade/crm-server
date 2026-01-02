@@ -53,11 +53,33 @@ export class StudentsHelperService {
 
         const { highestLevelOfEducation, levelOfStudies } = academicQualification;
 
+        const postGraduateCompleted = (
+            levelOfStudies?.[ELevelOfEducation.POSTGRADUATE]
+            && levelOfStudies?.[ELevelOfEducation.UNDERGRADUATE]
+            && levelOfStudies?.[ELevelOfEducation.Grade12]
+            && levelOfStudies?.[ELevelOfEducation.Grade10]
+        );
+
+        const underGraduateCompleted = (
+            levelOfStudies?.[ELevelOfEducation.UNDERGRADUATE]
+            && levelOfStudies?.[ELevelOfEducation.Grade12]
+            && levelOfStudies?.[ELevelOfEducation.Grade10]
+        );
+
+        const grade12Completed = (
+            levelOfStudies?.[ELevelOfEducation.Grade12]
+            && levelOfStudies?.[ELevelOfEducation.Grade10]
+        );
+
+        const grade10Completed = (
+            levelOfStudies?.[ELevelOfEducation.Grade10]
+        );
+
         if (
-            (highestLevelOfEducation === ELevelOfEducation.POSTGRADUATE && levelOfStudies?.length !== 4)
-            || (highestLevelOfEducation === ELevelOfEducation.UNDERGRADUATE && levelOfStudies?.length !== 3)
-            || (highestLevelOfEducation === ELevelOfEducation.GRADETWELVE && levelOfStudies?.length !== 2)
-            || (highestLevelOfEducation === ELevelOfEducation.GRADETEN && levelOfStudies?.length !== 1)
+            (highestLevelOfEducation === ELevelOfEducation.POSTGRADUATE && !postGraduateCompleted)
+            || (highestLevelOfEducation === ELevelOfEducation.UNDERGRADUATE && !underGraduateCompleted)
+            || (highestLevelOfEducation === ELevelOfEducation.Grade12 && !grade12Completed)
+            || (highestLevelOfEducation === ELevelOfEducation.Grade10 && !grade10Completed)
         ) {
             return 'Academic qualification incomplete';
         }

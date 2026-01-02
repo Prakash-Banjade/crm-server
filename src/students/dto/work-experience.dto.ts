@@ -28,10 +28,10 @@ export class StudentWorkExperienceDto implements IStudentWorkExperience {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsDateString()
     @ValidateIf((o: StudentWorkExperienceDto) => {
+        if (!o.workingTo) return true;
         if (!o.workingFrom) throw new BadRequestException('Working from is required');
-        if (o.workingTo && new Date(o.workingTo) < new Date(o.workingFrom)) throw new BadRequestException('Working to must be greater than working from');
+        if (new Date(o.workingTo) < new Date(o.workingFrom)) throw new BadRequestException('Working to must be greater than working from');
         return true;
     })
     workingTo?: string;

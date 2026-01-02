@@ -66,6 +66,8 @@ export class StudentsService {
       .skip(queryDto.skip)
       .take(queryDto.take)
       .leftJoin('student.createdBy', 'createdBy')
+      .leftJoin('student.applications', 'application')
+      .loadRelationCountAndMap('student.applicationsCount', 'student.applications')
 
     if (queryDto.q) {
       queryBuilder.andWhere('student.fullName ILIKE :search', { search: `${queryDto.q}%` })
@@ -90,7 +92,9 @@ export class StudentsService {
       'createdBy.id',
       'createdBy.lowerCasedFullName',
       'student.asLead',
+      // 'COUNT(DISTINCT application.id) AS applicationsCount'
     ])
+    // .groupBy('student.id')
 
     if (queryDto.onlyLeads) {
       queryBuilder.addSelect([

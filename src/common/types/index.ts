@@ -127,8 +127,8 @@ export enum EMonth {
 }
 
 export const programLevelByLevelOfEducation = {
-    [ELevelOfEducation.GRADETEN]: [EProgramLevel.High_School],
-    [ELevelOfEducation.GRADETWELVE]: [
+    [ELevelOfEducation.Grade10]: [EProgramLevel.High_School],
+    [ELevelOfEducation.Grade12]: [
         EProgramLevel.UG_Diploma_Certificate_Associate_Degree,
         EProgramLevel.UG,
         EProgramLevel.Foundation,

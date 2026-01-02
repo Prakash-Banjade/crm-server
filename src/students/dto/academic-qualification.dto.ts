@@ -1,15 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ELevelOfEducation, IStudentAcademicQualification, IStudentLevelOfStudy } from "../interface";
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsString, MaxLength, Min, ValidateIf, ValidateNested } from "class-validator";
+import { EGradingSystem, ELevelOfEducation, IStudentAcademicQualification, IStudentLevelOfStudy } from "../interface";
+import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, Min, ValidateIf, ValidateNested } from "class-validator";
 import { ECountry } from "src/common/types/country.type";
 import { BadRequestException } from "@nestjs/common";
 import { Type } from "class-transformer";
 
 export class StudentLevelOfStudyDto implements IStudentLevelOfStudy {
-    @ApiProperty({ enum: ELevelOfEducation })
-    @IsEnum(ELevelOfEducation)
-    levelOfStudy: ELevelOfEducation;
-
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
@@ -44,6 +40,10 @@ export class StudentLevelOfStudyDto implements IStudentLevelOfStudy {
     @MaxLength(100, { message: 'Degree awarded must be less than 100 characters' })
     degreeAwarded: string;
 
+    @ApiProperty({ enum: EGradingSystem })
+    @IsEnum(EGradingSystem)
+    gradingSystem: EGradingSystem;
+
     @ApiProperty()
     @IsNumber()
     @Min(0, { message: 'Score must be a positive number' })
@@ -69,6 +69,32 @@ export class StudentLevelOfStudyDto implements IStudentLevelOfStudy {
     endDate: string;
 }
 
+export class LevelOfStudiesDto implements NonNullable<IStudentAcademicQualification["levelOfStudies"]> {
+    @ApiProperty({ type: StudentLevelOfStudyDto })
+    @ValidateNested()
+    @Type(() => StudentLevelOfStudyDto)
+    @IsOptional()
+    [ELevelOfEducation.POSTGRADUATE]?: StudentLevelOfStudyDto;
+
+    @ApiProperty({ type: StudentLevelOfStudyDto })
+    @ValidateNested()
+    @Type(() => StudentLevelOfStudyDto)
+    @IsOptional()
+    [ELevelOfEducation.UNDERGRADUATE]?: StudentLevelOfStudyDto;
+
+    @ApiProperty({ type: StudentLevelOfStudyDto })
+    @ValidateNested()
+    @Type(() => StudentLevelOfStudyDto)
+    @IsOptional()
+    [ELevelOfEducation.Grade12]?: StudentLevelOfStudyDto;
+
+    @ApiProperty({ type: StudentLevelOfStudyDto })
+    @ValidateNested()
+    @Type(() => StudentLevelOfStudyDto)
+    @IsOptional()
+    [ELevelOfEducation.Grade10]?: StudentLevelOfStudyDto;
+}
+
 export class StudentAcademicQualificationDto implements IStudentAcademicQualification {
     @ApiProperty({ enum: ECountry })
     @IsEnum(ECountry)
@@ -78,8 +104,9 @@ export class StudentAcademicQualificationDto implements IStudentAcademicQualific
     @IsEnum(ELevelOfEducation)
     highestLevelOfEducation: ELevelOfEducation;
 
-    @ApiProperty({ type: StudentLevelOfStudyDto, isArray: true })
-    @ValidateNested({ each: true })
-    @Type(() => StudentLevelOfStudyDto)
-    levelOfStudies: StudentLevelOfStudyDto[];
+    @ApiProperty({ type: LevelOfStudiesDto })
+    @ValidateNested()
+    @Type(() => LevelOfStudiesDto)
+    @IsOptional()
+    levelOfStudies?: LevelOfStudiesDto;
 }

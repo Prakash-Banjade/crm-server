@@ -71,18 +71,25 @@ export interface IStudentPersonalInfo {
 export enum ELevelOfEducation {
     POSTGRADUATE = 'postgraduate',
     UNDERGRADUATE = 'undergraduate',
-    GRADETWELVE = 'grade12',
-    GRADETEN = 'grade10',
+    Grade12 = 'grade_12',
+    Grade10 = 'grade_10',
+}
+
+export enum EGradingSystem {
+    CGPA = 'CGPA',
+    Percentage = 'Percentage',
+    Marks = 'Marks',
+    Scale = 'Scale',
 }
 
 export interface IStudentLevelOfStudy {
-    levelOfStudy: ELevelOfEducation;
     nameOfBoard: string;
     nameOfInstitution: string
     country: ECountry;
     state: string;
     city: string;
     degreeAwarded: string;
+    gradingSystem: EGradingSystem;
     score: number;
     primaryLanguage: string;
     startDate: string;
@@ -92,7 +99,12 @@ export interface IStudentLevelOfStudy {
 export interface IStudentAcademicQualification {
     countryOfEducation: ECountry;
     highestLevelOfEducation: ELevelOfEducation;
-    levelOfStudies: IStudentLevelOfStudy[];
+    levelOfStudies?: {
+        [ELevelOfEducation.POSTGRADUATE]?: IStudentLevelOfStudy;
+        [ELevelOfEducation.UNDERGRADUATE]?: IStudentLevelOfStudy;
+        [ELevelOfEducation.Grade12]?: IStudentLevelOfStudy;
+        [ELevelOfEducation.Grade10]?: IStudentLevelOfStudy;
+    };
 }
 
 export enum EModeOfSalary {
