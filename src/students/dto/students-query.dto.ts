@@ -17,6 +17,11 @@ export class StudentQueryDto extends QueryDto {
     @Transform(({ value }) => sortBy[value] || sortBy.createdAt)
     sortBy: string = sortBy.createdAt;
 
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Transform(({ value }) => value === 'true')
+    onlyLeads: boolean = false;
+
     @ApiPropertyOptional({ format: 'date-time' })
     @IsString()
     @IsOptional()

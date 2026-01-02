@@ -38,16 +38,14 @@ export interface IStudentPassport {
 }
 
 export interface IStudentNationality {
-    nationality: ECountry;
-    citizenship: ECountry;
     livingAndStudyingCountry: ECountry;
     otherCountriesCitizenship?: ECountry[];
 }
 
 export interface IStudentBackgroundInfo {
     appliedImmigrationCountry?: ECountry;
-    medicalCondition: string;
-    visaRefusalCountries: ECountry[];
+    medicalCondition?: string;
+    visaRefusal?: string;
     criminalRecord?: string;
 }
 
@@ -62,12 +60,12 @@ export interface IStudentPersonalInfo {
     dob: string;
     gender: EGender;
     maritalStatus: EMaritalStatus;
-    mailingAddress: IStudentAddress;
-    permanentAddress: IStudentAddress;
-    passport: IStudentPassport;
-    nationality: IStudentNationality;
-    backgroundInfo: IStudentBackgroundInfo;
-    emergencyContact: IStudentEmergencyContact;
+    mailingAddress?: IStudentAddress;
+    permanentAddress?: IStudentAddress;
+    passport?: IStudentPassport;
+    nationality?: IStudentNationality;
+    backgroundInfo?: IStudentBackgroundInfo;
+    emergencyContact?: IStudentEmergencyContact;
 }
 
 export enum ELevelOfEducation {

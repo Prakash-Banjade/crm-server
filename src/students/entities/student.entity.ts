@@ -2,18 +2,12 @@ import { Account } from 'src/auth-system/accounts/entities/account.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { BeforeInsert, BeforeUpdate, Column, Entity, Index, ManyToOne } from 'typeorm';
 import type { IStudentAcademicQualification, IStudentAsLead, IStudentDocuments, IStudentPersonalInfo, IStudentWorkExperience } from '../interface';
-import { generateRefNo } from 'src/utils/utils';
 
 @Entity()
 export class Student extends BaseEntity {
     @Index({ unique: true })
     @Column({ type: 'text' })
     refNo: string;
-
-    @BeforeInsert()
-    setRefNo() {
-        this.refNo = generateRefNo();
-    }
 
     @Column({ type: 'text' })
     firstName: string;
@@ -30,6 +24,9 @@ export class Student extends BaseEntity {
     @Index()
     @Column({ type: 'text' })
     fullName: string;
+
+    @Column({ type: 'text', nullable: true })
+    profile: string | null; // file
 
     @Column({ type: 'text', unique: true })
     email: string;

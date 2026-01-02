@@ -125,13 +125,13 @@ export class StudentPassportDto implements IStudentPassport {
 }
 
 export class StudentNationalityDto implements IStudentNationality {
-    @ApiProperty({ enum: ECountry })
-    @IsEnum(ECountry)
-    nationality: ECountry;
+    // @ApiProperty({ enum: ECountry })
+    // @IsEnum(ECountry)
+    // nationality: ECountry;
 
-    @ApiProperty({ enum: ECountry })
-    @IsEnum(ECountry)
-    citizenship: ECountry;
+    // @ApiProperty({ enum: ECountry })
+    // @IsEnum(ECountry)
+    // citizenship: ECountry;
 
     @ApiProperty({ enum: ECountry })
     @IsEnum(ECountry)
@@ -149,15 +149,17 @@ export class StudentBackgroundInfoDto implements IStudentBackgroundInfo {
     @IsEnum(ECountry)
     appliedImmigrationCountry?: ECountry;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     @MaxLength(250, { message: 'Medical condition must be less than 250 characters' })
-    medicalCondition: string;
+    medicalCondition?: string;
 
-    @ApiProperty({ enum: ECountry, isArray: true })
-    @IsEnum(ECountry, { each: true })
-    visaRefusalCountries: ECountry[];
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @MaxLength(500, { message: 'Visa refusal must be less than 500 characters' })
+    visaRefusal?: string;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -204,30 +206,36 @@ export class StudentPersonalInfoDto implements IStudentPersonalInfo {
     @ApiProperty({ type: StudentAddressDto })
     @ValidateNested()
     @Type(() => StudentAddressDto)
-    mailingAddress: StudentAddressDto;
+    @IsOptional()
+    mailingAddress?: StudentAddressDto;
 
     @ApiProperty({ type: StudentAddressDto })
     @ValidateNested()
     @Type(() => StudentAddressDto)
-    permanentAddress: StudentAddressDto;
+    @IsOptional()
+    permanentAddress?: StudentAddressDto;
 
     @ApiProperty({ type: StudentPassportDto })
     @ValidateNested()
     @Type(() => StudentPassportDto)
-    passport: StudentPassportDto;
+    @IsOptional()
+    passport?: StudentPassportDto;
 
     @ApiProperty({ type: StudentNationalityDto })
     @ValidateNested()
     @Type(() => StudentNationalityDto)
-    nationality: StudentNationalityDto;
+    @IsOptional()
+    nationality?: StudentNationalityDto;
 
     @ApiProperty({ type: StudentBackgroundInfoDto })
     @ValidateNested()
     @Type(() => StudentBackgroundInfoDto)
-    backgroundInfo: StudentBackgroundInfoDto;
+    @IsOptional()
+    backgroundInfo?: StudentBackgroundInfoDto;
 
     @ApiProperty({ type: StudentEmergencyContactDto })
     @ValidateNested()
     @Type(() => StudentEmergencyContactDto)
-    emergencyContact: StudentEmergencyContactDto;
+    @IsOptional()
+    emergencyContact?: StudentEmergencyContactDto;
 }

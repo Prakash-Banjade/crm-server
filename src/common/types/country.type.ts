@@ -49,7 +49,7 @@ export enum ECountry {
     CO = 'Colombia',
     KM = 'Comoros',
     CG = 'Congo',
-    CD = 'Congo, The Democratic Republic of the',
+    CD = 'Congo, The Democratic Republic',
     CK = 'Cook Islands',
     CR = 'Costa Rica',
     CI = 'Cote D\'Ivoire',
