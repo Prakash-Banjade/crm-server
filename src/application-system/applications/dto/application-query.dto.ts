@@ -1,36 +1,36 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsOptional, IsString } from "class-validator";
-import { EApplicationStatus } from "src/application-system/applications/interface";
+import { IsDateString, IsOptional, IsString } from "class-validator";
 import { QueryDto } from "src/common/dto/query.dto";
 import { EMonth } from "src/common/types";
+import { EApplicationStatus } from "../interface";
 
-const sortBy = {
-    name: "student.fullName",
-    createdAt: "student.createdAt",
-}
-
-export class StudentQueryDto extends QueryDto {
-    @ApiPropertyOptional({ enum: sortBy, default: sortBy.createdAt })
-    @IsString()
-    @IsOptional()
-    @Transform(({ value }) => sortBy[value] || sortBy.createdAt)
-    sortBy: string = sortBy.createdAt;
-
+export class ApplicationQueryDto extends QueryDto {
     @ApiPropertyOptional()
-    @IsOptional()
-    @Transform(({ value }) => value === 'true')
-    onlyLeads: boolean = false;
-
-    @ApiPropertyOptional({ format: 'date-time' })
     @IsString()
     @IsOptional()
     createdFrom: string;
 
-    @ApiPropertyOptional({ format: 'date-time' })
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     createdTo: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value) return value.split(',');
+        return []
+    })
+    countryNames: string[];
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value) return value.split(',');
+        return []
+    })
+    universityNames: string[];
 
     @ApiPropertyOptional({ enum: EMonth })
     @IsOptional()
@@ -57,18 +57,22 @@ export class StudentQueryDto extends QueryDto {
     statuses: EApplicationStatus[];
 
     @ApiPropertyOptional()
+    @IsString()
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
-    countryIds: string[];
+    courseName: string;
 
     @ApiPropertyOptional()
+    @IsString()
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
-    universityIds: string[];
+    studentName: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    studentId: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    ackNo: string;
 }

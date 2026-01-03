@@ -1,8 +1,9 @@
 import { BaseEntity } from "src/common/entities/base.entity";
 import { University } from "src/universities/entities/university.entity";
-import { Column, Entity, Index, ManyToOne } from "typeorm";
-import { ECourseRequirement, EProgramLevel, type IRichText } from "src/common/types";
+import { Column, Entity, Index, ManyToOne, OneToMany } from "typeorm";
+import { ECourseRequirement, EMonth, EProgramLevel, type IRichText } from "src/common/types";
 import { Category } from "src/course-system/categories/entities/category.entity";
+import { Application } from "src/application-system/applications/entities/application.entity";
 
 @Entity()
 export class Course extends BaseEntity {
@@ -18,6 +19,9 @@ export class Course extends BaseEntity {
 
     @ManyToOne(() => University, university => university.courses, { onDelete: 'RESTRICT', nullable: false })
     university: University;
+
+    @OneToMany(() => Application, application => application.course)
+    applications: Application[]
 
     @Column({ type: 'float' })
     fee: number;
@@ -71,8 +75,8 @@ export class Course extends BaseEntity {
     @Column({ type: 'enum', enum: EProgramLevel, default: EProgramLevel.High_School })
     programLevel: EProgramLevel;
 
-    @Column({ type: 'text', array: true })
-    intakes: string[];
+    @Column({ type: 'enum', enum: EMonth, array: true })
+    intakes: EMonth[];
 
     @Column({ type: 'boolean', default: false })
     hasScholarship: boolean;

@@ -28,7 +28,6 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'User details retrieved successfully.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
     @HttpCode(HttpStatus.OK)
-    @CheckAbilities({ subject: Role.USER, action: Action.READ })
     @ApiBearerAuth()
     @Get('me')
     me(@CurrentUser() currentUser: AuthUser) {

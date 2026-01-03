@@ -27,7 +27,9 @@ import { LearningResourcesModule } from './learning-resources/learning-resources
 import { CounselorsModule } from './counselors/counselors.module';
 import { BdeModule } from './bde/bde.module';
 import { StudentsModule } from './students/students.module';
-import { ApplicationsModule } from './applications/applications.module';
+import { ApplicationSystemModule } from './application-system/application-system.module';
+import { AbilitiesGuard } from './common/guards/abilities.guard';
+import { CaslModule } from './auth-system/casl/casl.module';
 
 @Module({
   imports: [
@@ -76,6 +78,7 @@ import { ApplicationsModule } from './applications/applications.module';
     }),
     UtilitiesModule,
     AuthSystemModule,
+    CaslModule,
     MailModule,
     RegionalInchargesModule,
     CountriesModule,
@@ -86,7 +89,7 @@ import { ApplicationsModule } from './applications/applications.module';
     CounselorsModule,
     BdeModule,
     StudentsModule,
-    ApplicationsModule,
+    ApplicationSystemModule,
   ],
   controllers: [AppController],
   providers: [
@@ -94,7 +97,11 @@ import { ApplicationsModule } from './applications/applications.module';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
-    }
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AbilitiesGuard,
+    },
   ],
 })
 export class AppModule { }

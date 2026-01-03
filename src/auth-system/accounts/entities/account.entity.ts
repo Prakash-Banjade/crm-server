@@ -12,6 +12,8 @@ import { Organization } from "src/auth-system/organizations/entities/organizatio
 import { Counselor } from "src/counselors/entities/counselor.entity";
 import { Bde } from "src/bde/entities/bde.entity";
 import { Student } from "src/students/entities/student.entity";
+import { Application } from "src/application-system/applications/entities/application.entity";
+import { Message } from "src/application-system/messages/entities/message.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -97,4 +99,10 @@ export class Account extends BaseEntity {
 
     @OneToMany(() => Student, student => student.createdBy)
     createdStudents: Student[];
+
+    @OneToMany(() => Application, application => application.createdBy)
+    createdApplications: Application[]
+
+    @OneToMany(() => Message, message => message.sender)
+    sentApplicationMessages: Message[]
 }

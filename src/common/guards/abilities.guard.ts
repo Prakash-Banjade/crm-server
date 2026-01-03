@@ -25,6 +25,9 @@ export class AbilitiesGuard implements CanActivate {
         const { user } = context.switchToHttp().getRequest<FastifyRequest>();
         if (!user) throw new ForbiddenException('Access Denied');
 
+        // If no @CheckAbilities decorator is present, allow authenticated users through
+        if (rules.length === 0) return true;
+
         const ability = this.caslAbility.defineAbility(user);
 
         try {

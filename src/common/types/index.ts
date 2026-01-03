@@ -112,18 +112,18 @@ export enum EBookingStatus {
 }
 
 export enum EMonth {
-    JANUARY = 'january',
-    FEBRUARY = 'february',
-    MARCH = 'march',
-    APRIL = 'april',
-    MAY = 'may',
-    JUNE = 'june',
-    JULY = 'july',
-    AUGUST = 'august',
-    SEPTEMBER = 'september',
-    OCTOBER = 'october',
-    NOVEMBER = 'november',
-    DECEMBER = 'december',
+    January = 'january',
+    February = 'february',
+    March = 'march',
+    April = 'april',
+    May = 'may',
+    June = 'june',
+    July = 'july',
+    August = 'august',
+    September = 'september',
+    October = 'october',
+    November = 'november',
+    December = 'december',
 }
 
 export const programLevelByLevelOfEducation = {

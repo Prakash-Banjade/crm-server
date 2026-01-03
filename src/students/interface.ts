@@ -15,7 +15,7 @@ export interface IStudentDocuments {
     gradeTwelveMarksheet: string;
     passport: string;
     ielts: string;
-    recommendationLetter: string;
+    recommendationLetters: string[];
     workExperience?: string;
 }
 

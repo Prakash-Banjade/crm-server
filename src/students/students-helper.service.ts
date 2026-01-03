@@ -86,9 +86,9 @@ export class StudentsHelperService {
 
         if (!documents) return 'Documents incomplete';
 
-        const { cv, gradeTenMarksheet, gradeTwelveMarksheet, passport, ielts, recommendationLetter } = documents;
+        const { cv, gradeTenMarksheet, gradeTwelveMarksheet, passport, ielts, recommendationLetters } = documents;
 
-        if (!cv || !gradeTenMarksheet || !gradeTwelveMarksheet || !passport || !ielts || !recommendationLetter) return 'Documents incomplete';
+        if (!cv || !gradeTenMarksheet || !gradeTwelveMarksheet || !passport || !ielts || !recommendationLetters.length) return 'Documents incomplete';
 
         return "";
     }

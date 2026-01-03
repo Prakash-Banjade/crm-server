@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPhoneNumber, IsString, MaxLength, Min, ValidateIf, ValidateNested } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPhoneNumber, IsString, MaxLength, Min, ValidateIf, ValidateNested } from "class-validator";
 import type { IStudentAddress, IStudentBackgroundInfo, IStudentDocuments, IStudentEmergencyContact, IStudentNationality, IStudentPassport, IStudentPersonalInfo } from "../interface";
 import { ECountry } from "src/common/types/country.type";
 import { BadRequestException } from "@nestjs/common";
@@ -41,9 +41,11 @@ export class StudentDocumentsDto implements IStudentDocuments {
     ielts: string;
 
     @ApiProperty()
-    @IsString()
+    @IsString({ each: true })
     @IsNotEmpty()
-    recommendationLetter: string;
+    @ArrayMaxSize(2, { message: 'Recommendation letters must be less than 2' })
+    @ArrayMinSize(1, { message: 'At least one recommendation letter is required' })
+    recommendationLetters: string[];
 
     @ApiPropertyOptional()
     @IsOptional()

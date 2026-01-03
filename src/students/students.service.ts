@@ -3,8 +3,8 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Student } from './entities/student.entity';
-import { Repository } from 'typeorm';
-import { AuthUser } from 'src/common/types';
+import { FindOptionsSelect, Repository } from 'typeorm';
+import { AuthUser, Role } from 'src/common/types';
 import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { StudentQueryDto } from './dto/students-query.dto';
 import paginatedData from 'src/utils/paginatedData';
@@ -92,9 +92,7 @@ export class StudentsService {
       'createdBy.id',
       'createdBy.lowerCasedFullName',
       'student.asLead',
-      // 'COUNT(DISTINCT application.id) AS applicationsCount'
     ])
-    // .groupBy('student.id')
 
     if (queryDto.onlyLeads) {
       queryBuilder.addSelect([
@@ -106,17 +104,17 @@ export class StudentsService {
     return paginatedData(queryDto, queryBuilder);
   }
 
-  async findOne(id: string, currentUser: AuthUser) {
+  async findOne(id: string, currentUser: AuthUser, select?: FindOptionsSelect<Student>) {
     const existing = await this.studentsRepo.findOne({
       where: {
         id,
         createdBy: {
           organization: {
-            id: currentUser.organizationId
+            id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId
           }
         }
       },
-      select: {
+      select: select ?? {
         id: true,
         refNo: true,
         firstName: true,

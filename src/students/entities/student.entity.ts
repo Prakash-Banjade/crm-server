@@ -2,7 +2,7 @@ import { Account } from 'src/auth-system/accounts/entities/account.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { BeforeInsert, BeforeUpdate, Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import type { IStudentAcademicQualification, IStudentAsLead, IStudentDocuments, IStudentPersonalInfo, IStudentWorkExperience } from '../interface';
-import { Application } from 'src/applications/entities/application.entity';
+import { Application } from 'src/application-system/applications/entities/application.entity';
 
 @Entity()
 export class Student extends BaseEntity {

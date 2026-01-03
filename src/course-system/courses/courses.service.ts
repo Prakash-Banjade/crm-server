@@ -3,12 +3,12 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, FindOptionsSelect, In, Repository } from 'typeorm';
 import { CategoriesService } from '../categories/categories.service';
 import { UniversitiesService } from 'src/universities/universities.service';
 import { CourseQueryDto } from './dto/courses-query.dto';
 import paginatedData from 'src/utils/paginatedData';
-import { programLevelByLevelOfEducation } from 'src/common/types';
+import { EMonth, programLevelByLevelOfEducation } from 'src/common/types';
 
 @Injectable()
 export class CoursesService {
@@ -32,6 +32,7 @@ export class CoursesService {
 
     return { message: 'Course created successfully' }
   }
+
   findAll(queryDto: CourseQueryDto) {
     const queryBuilder = this.courseRepository.createQueryBuilder('course')
       .orderBy(queryDto.sortBy, queryDto.order)
@@ -122,11 +123,11 @@ export class CoursesService {
     return paginatedData(queryDto, queryBuilder);
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, select?: FindOptionsSelect<Course>) {
     const existing = await this.courseRepository.findOne({
       where: { id },
       relations: { university: true, category: true },
-      select: {
+      select: select ?? {
         id: true,
         name: true,
         applicationFee: true,
@@ -195,6 +196,20 @@ export class CoursesService {
     await this.courseRepository.save(existing);
 
     return { message: 'Course updated successfully' }
+  }
+
+  async findCourseByIntake(id: string, intake: EMonth, select?: FindOptionsSelect<Course>) {
+    const course = await this.courseRepository.findOne({
+      where: {
+        id,
+        intakes: In([intake])
+      },
+      select: select ?? { id: true }
+    })
+
+    if (!course) throw new NotFoundException('Course not found')
+
+    return course;
   }
 
   async remove(id: string) {
