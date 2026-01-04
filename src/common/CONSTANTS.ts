@@ -18,6 +18,7 @@ export const enum AuthMessage {
     DEVICE_NOT_FOUND = 'Invalid device identity',
     TOKEN_EXPIRED = "TokenExpiredError",
     REPORT_NOT_PUBLISHED = "Report not published yet",
+    ACCOUNT_BLACKLISTED = "Account blacklisted",
 };
 
 export const MAX_PREV_PASSWORDS = 3 as const;

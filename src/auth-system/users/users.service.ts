@@ -43,8 +43,6 @@ export class UsersService extends BaseRepository {
   async findAll(queryDto: UsersQueryDto, currentUser: AuthUser) {
     const queryBuilder = this.getRepository(User).createQueryBuilder('user');
 
-    const organizationId = currentUser.role === Role.SUPER_ADMIN ? queryDto.organizationId : currentUser.organizationId;
-
     queryBuilder
       .orderBy("user.createdAt", queryDto.order)
       .offset(queryDto.skip)
@@ -53,16 +51,20 @@ export class UsersService extends BaseRepository {
       .leftJoin("account.organization", "organization")
       .where(new Brackets(qb => {
         queryDto.q && qb.andWhere("account.lowerCasedFullName ILIKE :search", { search: `${queryDto.q}%` });
-        organizationId && qb.andWhere('organization.id = :organizationId', { organizationId });
       }))
-      .select([
-        'user.id as "userId"',
-        'account.lowerCasedFullName as "fullName"',
-        'account.profileImage as "profileImage"',
-        'account.email as email',
-        'account.role as role',
-        'user.createdAt as "createdAt"',
-      ])
+
+    if (currentUser.organizationId) {
+      queryBuilder.andWhere('organization.id = :organizationId', { organizationId: currentUser.organizationId });
+    }
+
+    queryBuilder.select([
+      'user.id as "userId"',
+      'account.lowerCasedFullName as "fullName"',
+      'account.profileImage as "profileImage"',
+      'account.email as email',
+      'account.role as role',
+      'user.createdAt as "createdAt"',
+    ])
 
     return paginatedRawData(queryDto, queryBuilder);
   }
@@ -158,5 +160,22 @@ export class UsersService extends BaseRepository {
     await this.getRepository(Account).remove(account);
 
     return { message: 'Admin removed' }
+  }
+
+  async toggleBlacklist(id: string, currentUser: AuthUser) {
+    const account = await this.getRepository(Account).findOne({
+      where: {
+        user: { id },
+        organization: { id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId }
+      },
+      select: { id: true, blacklistedAt: true }
+    });
+
+    if (!account) throw new NotFoundException('User not found');
+
+    const toggledBlacklistedAt = account.blacklistedAt ? null : new Date();
+    // blacklist the account
+    await this.getRepository(Account).update(account.id, { blacklistedAt: toggledBlacklistedAt });
+    return { message: toggledBlacklistedAt ? 'User blacklisted' : 'User removed from blacklist' }
   }
 }

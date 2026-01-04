@@ -15,21 +15,21 @@ export class BookingsController {
 
   @Post()
   @ApiOperation({ description: "Create a new booking" })
-  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.CREATE })
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.CREATE })
   create(@Body() createBookingDto: CreateBookingDto) {
     return this.bookingsService.create(createBookingDto);
   }
 
   @Get()
   @ApiOperation({ description: "Get all bookings" })
-  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.READ })
   findAll(@Query() queryDto: QueryDto) {
     return this.bookingsService.findAll(queryDto);
   }
 
   @Get(':id')
   @ApiOperation({ description: "Get a booking by id" })
-  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.READ })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.bookingsService.findOne(id);
   }

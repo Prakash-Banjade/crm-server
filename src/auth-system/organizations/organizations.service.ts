@@ -1,26 +1,28 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { ConflictException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { Organization } from './entities/organization.entity';
-import { FindOptionsSelect, ILike, Repository } from 'typeorm';
-import { QueryDto } from 'src/common/dto/query.dto';
+import { DataSource, FindOptionsSelect, ILike } from 'typeorm';
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto/organization.dto';
 import { AuthUser, Role } from 'src/common/types';
 import { AccountsService } from '../accounts/accounts.service';
 import { paginatedRawData } from 'src/utils/paginatedData';
 import { OrganizationQueryDto } from './dto/organization-query.dto';
 import { MinioService } from 'src/minio/minio.service';
+import { BaseRepository } from 'src/common/repository/base-repository';
+import { REQUEST } from '@nestjs/core';
+import { type FastifyRequest } from 'fastify';
+import { Account } from '../accounts/entities/account.entity';
 
-@Injectable()
-export class OrganizationsService {
+@Injectable({ scope: Scope.REQUEST })
+export class OrganizationsService extends BaseRepository {
 
     constructor(
-        @InjectRepository(Organization) private readonly organizationRepo: Repository<Organization>,
+        datasource: DataSource, @Inject(REQUEST) req: FastifyRequest,
         private readonly accountsService: AccountsService,
         private readonly minioService: MinioService
-    ) { }
+    ) { super(datasource, req) }
 
     async create(dto: CreateOrganizationDto, currentUser: AuthUser) {
-        const existingWithSameName = await this.organizationRepo.findOne({
+        const existingWithSameName = await this.getRepository(Organization).findOne({
             where: [
                 { name: ILike(dto.name) },
                 { email: ILike(dto.email) }
@@ -36,7 +38,7 @@ export class OrganizationsService {
             dto.registrationDocument ? this.minioService.moveFileToPermanent(dto.registrationDocument) : null,
         ]);
 
-        const newOrganization = this.organizationRepo.create({
+        const newOrganization = this.getRepository(Organization).create({
             ...dto,
             logo,
             panCertificate,
@@ -44,7 +46,7 @@ export class OrganizationsService {
             createdBy: account,
         });
 
-        await this.organizationRepo.save(newOrganization)
+        await this.getRepository(Organization).save(newOrganization)
 
         return { message: 'Organization created successfully' }
     }
@@ -54,7 +56,7 @@ export class OrganizationsService {
             ? queryDto.createdById
             : currentUser.accountId;
 
-        const queryBuilder = this.organizationRepo.createQueryBuilder('organization')
+        const queryBuilder = this.getRepository(Organization).createQueryBuilder('organization')
             .orderBy(queryDto.sortBy, queryDto.order)
             .offset(queryDto.skip)
             .limit(queryDto.take)
@@ -80,7 +82,7 @@ export class OrganizationsService {
     }
 
     async findOne(id: string, select?: FindOptionsSelect<Organization>) {
-        const existing = await this.organizationRepo.findOne({
+        const existing = await this.getRepository(Organization).findOne({
             where: { id },
             select: select ?? {
                 id: true,
@@ -115,7 +117,7 @@ export class OrganizationsService {
             ? queryDto.createdById
             : currentUser.accountId;
 
-        const queryBuilder = this.organizationRepo.createQueryBuilder('organization')
+        const queryBuilder = this.getRepository(Organization).createQueryBuilder('organization')
             .orderBy("organization.createdAt", queryDto.order)
             .leftJoin('organization.createdBy', 'createdBy')
             .select([
@@ -131,7 +133,7 @@ export class OrganizationsService {
     }
 
     async update(id: string, dto: UpdateOrganizationDto, currentUser: AuthUser) {
-        const existing = await this.organizationRepo.findOne({
+        const existing = await this.getRepository(Organization).findOne({
             where: {
                 id,
                 createdBy: { id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.accountId }
@@ -141,7 +143,7 @@ export class OrganizationsService {
         if (!existing) throw new NotFoundException('Organization not found')
 
         // check if name or email is taken
-        const existingWithSameName = await this.organizationRepo.findOne({
+        const existingWithSameName = await this.getRepository(Organization).findOne({
             where: [
                 { name: ILike(dto.name || existing.name) },
                 { email: ILike(dto.email || existing.email) }
@@ -170,34 +172,32 @@ export class OrganizationsService {
 
         Object.assign(existing, dto);
 
-        await this.organizationRepo.save(existing);
+        await this.getRepository(Organization).save(existing);
         return { message: 'Organization updated' }
     }
 
     async toggleBlock(id: string) {
-        const existing = await this.organizationRepo.findOne({ where: { id }, select: { id: true, blacklistedAt: true } });
+        const existing = await this.getRepository(Organization).findOne({ where: { id }, select: { id: true, blacklistedAt: true } });
         if (!existing) throw new NotFoundException('Organization not found')
 
-        if (existing.blacklistedAt) {
-            existing.blacklistedAt = null;
-            await this.organizationRepo.save(existing);
-            return { message: 'Organization unblocked' }
-        }
+        const toggledBlacklistedAt = existing.blacklistedAt ? null : new Date();
 
-        existing.blacklistedAt = new Date();
-        await this.organizationRepo.save(existing);
-        return { message: 'Organization blocked' }
+        await this.getRepository(Organization).update({ id }, { blacklistedAt: toggledBlacklistedAt });
+        // also update blacklistedAt for all accounts associated with this organization
+        await this.getRepository(Account).update({ organization: { id } }, { blacklistedAt: toggledBlacklistedAt });
+
+        return { message: toggledBlacklistedAt ? 'Organization blocked' : 'Organization unblocked' }
     }
 
     async getOrganization(id: string, select: FindOptionsSelect<Organization>) {
-        const existing = await this.organizationRepo.findOne({ where: { id }, select });
+        const existing = await this.getRepository(Organization).findOne({ where: { id }, select });
         if (!existing) throw new NotFoundException('Organization not found')
 
         return existing;
     }
 
     async delete(id: string) {
-        const existing = await this.organizationRepo.findOne({ where: { id }, select: { id: true, logo: true, panCertificate: true, registrationDocument: true } });
+        const existing = await this.getRepository(Organization).findOne({ where: { id }, select: { id: true, logo: true, panCertificate: true, registrationDocument: true } });
         if (!existing) throw new NotFoundException('Organization not found')
 
         // delete files from minio
@@ -208,7 +208,7 @@ export class OrganizationsService {
         ])
 
         // delete organization from db
-        await this.organizationRepo.delete({ id });
+        await this.getRepository(Organization).delete({ id });
 
         return { message: 'Organization deleted' }
     }

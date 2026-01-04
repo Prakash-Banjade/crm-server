@@ -14,6 +14,7 @@ import { Bde } from "src/bde/entities/bde.entity";
 import { Student } from "src/students/entities/student.entity";
 import { Application } from "src/application-system/applications/entities/application.entity";
 import { Message } from "src/application-system/messages/entities/message.entity";
+import { Booking } from "src/bookings/entities/booking.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -43,6 +44,9 @@ export class Account extends BaseEntity {
 
     @Column({ type: 'timestamp', nullable: true })
     verifiedAt: Date | null = null;
+
+    @Column({ type: 'timestamp', nullable: true })
+    blacklistedAt: Date | null;
 
     @Column({ type: 'text', array: true })
     prevPasswords: string[];
@@ -79,6 +83,7 @@ export class Account extends BaseEntity {
     /**
      * Organization to which the account belongs
      */
+    @Index()
     @ManyToOne(() => Organization, organization => organization.accounts, { onDelete: 'CASCADE' })
     organization: Organization;
 
@@ -105,4 +110,7 @@ export class Account extends BaseEntity {
 
     @OneToMany(() => Message, message => message.sender)
     sentApplicationMessages: Message[]
+
+    @OneToMany(() => Booking, booking => booking.createdBy)
+    createdBookings: Booking[]
 }

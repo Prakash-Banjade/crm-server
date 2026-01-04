@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseInterceptors } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { ApiBearerAuth, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CheckAbilities } from 'src/common/decorators/abilities.decorator';
@@ -7,6 +7,7 @@ import { CreateOrganizationDto, UpdateOrganizationDto } from './dto/organization
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { OrganizationQueryDto } from './dto/organization-query.dto';
 import { Organization } from './entities/organization.entity';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 
 @ApiBearerAuth()
 @ApiTags('Organizations')
@@ -54,6 +55,7 @@ export class OrganizationsController {
   @ApiOkResponse({ description: 'Successfully toggled block organization' })
   @ApiNotFoundResponse({ description: 'Organization not found' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.UPDATE })
+  @UseInterceptors(TransactionInterceptor)
   toggleBlock(@Param('id', ParseUUIDPipe) id: string) {
     return this.organizationsService.toggleBlock(id);
   }

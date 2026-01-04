@@ -1,6 +1,7 @@
+import { Account } from "src/auth-system/accounts/entities/account.entity";
 import { BaseEntity } from "src/common/entities/base.entity";
 import { EBookingStatus, EBookingSubType, EBookingType } from "src/common/types";
-import { Column, Entity, Index } from "typeorm";
+import { Column, Entity, Index, ManyToOne } from "typeorm";
 
 @Entity()
 export class Booking extends BaseEntity {
@@ -37,4 +38,7 @@ export class Booking extends BaseEntity {
 
     @Column({ type: 'enum', enum: EBookingStatus, default: EBookingStatus.PENDING })
     status: EBookingStatus;
+
+    @ManyToOne(() => Account, (account) => account.createdBookings, { onDelete: 'CASCADE', nullable: false })
+    createdBy: Account
 }

@@ -24,7 +24,7 @@ export class UsersController {
   }
 
   @Get()
-  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.READ })
   findAll(@Query() queryDto: UsersQueryDto, @CurrentUser() currentUser: AuthUser) {
     return this.usersService.findAll(queryDto, currentUser);
   }
@@ -43,6 +43,14 @@ export class UsersController {
   @UseInterceptors(TransactionInterceptor)
   update(@Body() updateUserDto: UpdateUserDto, @CurrentUser() currentUser: AuthUser) {
     return this.usersService.update(updateUserDto, currentUser);
+  }
+
+  @Patch('/blacklist/:id')
+  @ApiOperation({ summary: 'Blacklist a user' })
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.UPDATE })
+  @UseInterceptors(TransactionInterceptor)
+  toggleBlacklist(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() currentUser: AuthUser) {
+    return this.usersService.toggleBlacklist(id, currentUser);
   }
 
   @Delete(':id')
