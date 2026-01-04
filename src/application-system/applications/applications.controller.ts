@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
@@ -30,17 +30,20 @@ export class ApplicationsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.applicationsService.findOne(+id);
+  @CheckAbilities({ subject: Application, action: Action.READ })
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() currentUser: AuthUser) {
+    return this.applicationsService.findOne(id, currentUser);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateApplicationDto: UpdateApplicationDto) {
-    return this.applicationsService.update(+id, updateApplicationDto);
+  @CheckAbilities({ subject: Application, action: Action.UPDATE })
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateApplicationDto: UpdateApplicationDto, @CurrentUser() currentUser: AuthUser) {
+    return this.applicationsService.update(id, updateApplicationDto, currentUser);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.applicationsService.remove(+id);
+  @CheckAbilities({ subject: Application, action: Action.DELETE })
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.applicationsService.remove(id);
   }
 }

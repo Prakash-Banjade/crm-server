@@ -80,6 +80,12 @@ export class UniversitiesService {
       queryBuilder.andWhere("country.id = :countryId", { countryId: queryDto.countryId });
     }
 
+    if (queryDto.intake) {
+      queryBuilder
+        .leftJoin("university.courses", "course")
+        .andWhere(':intake = ANY(course.intakes)', { intake: queryDto.intake });
+    }
+
     queryBuilder.select([
       "university.id as value",
       "university.name as label",

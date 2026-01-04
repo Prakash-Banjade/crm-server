@@ -19,4 +19,9 @@ export class UniversityQueryDto extends QueryDto {
     @IsUUID()
     @IsOptional()
     countryId?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    intake?: string;
 }

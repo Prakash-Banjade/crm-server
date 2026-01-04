@@ -7,7 +7,7 @@ import { Brackets, FindOptionsSelect, In, Repository } from 'typeorm';
 import { CategoriesService } from '../categories/categories.service';
 import { UniversitiesService } from 'src/universities/universities.service';
 import { CourseQueryDto } from './dto/courses-query.dto';
-import paginatedData from 'src/utils/paginatedData';
+import paginatedData, { paginatedRawData } from 'src/utils/paginatedData';
 import { EMonth, programLevelByLevelOfEducation } from 'src/common/types';
 
 @Injectable()
@@ -43,17 +43,14 @@ export class CoursesService {
       .leftJoinAndSelect('course.category', 'category')
       .where(new Brackets(qb => {
         if (queryDto.q) {
-          qb.orWhere('course.name ILIKE :search)', { search: `%${queryDto.q}%` })
-            .orWhere('university.name ILIKE :search)', { search: `%${queryDto.q}%` })
-            .orWhere('country.name ILIKE :search)', { search: `%${queryDto.q}%` })
-            .orWhere('country.states ILIKE :search)', { search: `%${queryDto.q}%` })
+          qb.andWhere('course.name ILIKE :search)', { search: `%${queryDto.q}%` })
         }
       }))
       .andWhere(new Brackets(qb => {
         queryDto.categoryNames?.length && qb.andWhere('category.name IN (:...categoryNames)', { categoryNames: queryDto.categoryNames })
         queryDto.countryNames?.length && qb.andWhere('country.name IN (:...countryNames)', { countryNames: queryDto.countryNames })
         queryDto.programLevels?.length && qb.andWhere('course.programLevel IN (:...programLevels)', { programLevels: queryDto.programLevels })
-        queryDto.universityNames?.length && qb.andWhere('university.name IN (:...universityNames)', { universityNames: queryDto.universityNames })
+        queryDto.universityIds?.length && qb.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.universityIds })
         queryDto.courseDurationFrom && qb.andWhere('course.duration >= :courseDurationFrom', { courseDurationFrom: queryDto.courseDurationFrom })
         queryDto.courseDurationTo && qb.andWhere('course.duration <= :courseDurationTo', { courseDurationTo: queryDto.courseDurationTo })
         queryDto.feeFrom && qb.andWhere('course.fee >= :feeFrom', { feeFrom: queryDto.feeFrom })
@@ -121,6 +118,25 @@ export class CoursesService {
     ]);
 
     return paginatedData(queryDto, queryBuilder);
+  }
+
+  getOptions(queryDto: CourseQueryDto) {
+    const queryBuilder = this.courseRepository.createQueryBuilder('course')
+      .orderBy(queryDto.sortBy, queryDto.order)
+      .offset(queryDto.skip)
+      .limit(queryDto.take)
+      .leftJoin('course.university', 'university')
+
+    if (queryDto.universityIds?.length) {
+      queryBuilder.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.universityIds })
+    }
+
+    queryBuilder.select([
+      'course.id as value',
+      'course.name as label',
+    ])
+
+    return paginatedRawData(queryDto, queryBuilder);
   }
 
   async findOne(id: string, select?: FindOptionsSelect<Course>) {
@@ -198,14 +214,12 @@ export class CoursesService {
     return { message: 'Course updated successfully' }
   }
 
-  async findCourseByIntake(id: string, intake: EMonth, select?: FindOptionsSelect<Course>) {
-    const course = await this.courseRepository.findOne({
-      where: {
-        id,
-        intakes: In([intake])
-      },
-      select: select ?? { id: true }
-    })
+  async findCourseByIntake(id: string, intake: EMonth) {
+    const course = await this.courseRepository.createQueryBuilder('course')
+      .where('course.id = :id', { id })
+      .where(':intake = ANY(course.intakes)', { intake })
+      .select(['course.id'])
+      .getOne();
 
     if (!course) throw new NotFoundException('Course not found')
 

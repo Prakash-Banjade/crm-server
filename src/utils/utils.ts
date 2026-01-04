@@ -28,9 +28,3 @@ export function generateDeviceId(userAgent: string, ipAddress: string): string {
 export function getLowerCasedFullName(firstName: string, lastName: string): string {
     return `${firstName?.trim()} ${lastName?.trim()}`.toLowerCase();
 }
-
-export function generateRefNo() {
-    const min = 100000;
-    const max = 999999;
-    return (new Date().getFullYear().toString().slice(2)) + '/' + (new Date().getFullYear() + 1).toString().slice(2) + '-' + randomInt(min, max + 1);
-}

@@ -50,7 +50,7 @@ export class Student extends BaseEntity {
     @Column({ type: 'jsonb', nullable: true })
     documents?: IStudentDocuments;
 
-    @ManyToOne(() => Account, account => account.createdStudents, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Account, account => account.createdStudents, { onDelete: 'CASCADE', nullable: false })
     createdBy: Account
 
     @Column({ type: 'jsonb', nullable: true })

@@ -42,8 +42,6 @@ export class StudentsService {
     return { message: 'Student created successfully' }
   }
 
-
-
   async createAsLead(dto: CreateStudentDto, createdBy: Account) {
     const refNo = await this.studentsHelperService.generateStudentId()
 
@@ -105,31 +103,59 @@ export class StudentsService {
   }
 
   async findOne(id: string, currentUser: AuthUser, select?: FindOptionsSelect<Student>) {
-    const existing = await this.studentsRepo.findOne({
-      where: {
-        id,
-        createdBy: {
-          organization: {
-            id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId
-          }
-        }
-      },
-      select: select ?? {
-        id: true,
-        refNo: true,
-        firstName: true,
-        lastName: true,
-        fullName: true,
-        email: true,
-        createdAt: true,
-        phoneNumber: true,
-        statusMessage: true,
-        personalInfo: true,
-        academicQualification: true,
-        documents: true,
-        workExperiences: true,
-      }
-    });
+    // const existing = await this.studentsRepo.findOne({
+    //   where: {
+    //     id,
+    //     createdBy: {
+    //       organization: {
+    //         id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId
+    //       }
+    //     }
+    //   },
+    //   select: select ?? {
+    //     id: true,
+    //     refNo: true,
+    //     firstName: true,
+    //     lastName: true,
+    //     fullName: true,
+    //     email: true,
+    //     createdAt: true,
+    //     phoneNumber: true,
+    //     statusMessage: true,
+    //     personalInfo: true,
+    //     academicQualification: true,
+    //     documents: true,
+    //     workExperiences: true,
+    //   }
+    // });
+
+    const queryBuilder = this.studentsRepo.createQueryBuilder('student')
+      .where('student.id = :id', { id })
+      .loadRelationCountAndMap('student.applicationsCount', 'student.applications')
+
+    if (currentUser.role !== Role.SUPER_ADMIN) {
+      queryBuilder
+        .leftJoin('student.createdBy', 'createdBy')
+        .andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId })
+    }
+
+    queryBuilder.select([
+      'student.id',
+      'student.refNo',
+      'student.fullName',
+      'student.firstName',
+      'student.lastName',
+      'student.email',
+      'student.createdAt',
+      'student.phoneNumber',
+      'student.statusMessage',
+      'student.personalInfo',
+      'student.academicQualification',
+      'student.documents',
+      'student.workExperiences',
+    ])
+
+    const existing = await queryBuilder.getOne();
 
     if (!existing) throw new NotFoundException('Student not found');
 

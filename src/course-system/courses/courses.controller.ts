@@ -26,6 +26,12 @@ export class CoursesController {
     return this.coursesService.findAll(queryDto);
   }
 
+  @Get('options')
+  @ApiOperation({ description: "Get all courses options" })
+  getOptions(@Query() queryDto: CourseQueryDto) {
+    return this.coursesService.getOptions(queryDto);
+  }
+
   @Get(':id')
   @ApiOperation({ description: "Get a course by id" })
   findOne(@Param('id', ParseUUIDPipe) id: string) {

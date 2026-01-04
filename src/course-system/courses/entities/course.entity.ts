@@ -75,6 +75,7 @@ export class Course extends BaseEntity {
     @Column({ type: 'enum', enum: EProgramLevel, default: EProgramLevel.High_School })
     programLevel: EProgramLevel;
 
+    @Index({ parser: 'gin' })
     @Column({ type: 'enum', enum: EMonth, array: true })
     intakes: EMonth[];
 

@@ -4,6 +4,12 @@ import { Student } from "./entities/student.entity";
 import { Repository } from "typeorm";
 import { ELevelOfEducation } from "./interface";
 
+export const studentStatusMessages = {
+    personalInfo: 'Personal info incomplete',
+    academicQualification: 'Academic qualification incomplete',
+    documents: 'Documents incomplete',
+} as const;
+
 @Injectable()
 export class StudentsHelperService {
     constructor(
@@ -47,9 +53,9 @@ export class StudentsHelperService {
             || !personalInfo.emergencyContact
             || !personalInfo.nationality
             || !personalInfo.passport
-        ) return 'Personal info incomplete';
+        ) return studentStatusMessages.personalInfo;
 
-        if (!academicQualification) return 'Academic qualification incomplete';
+        if (!academicQualification) return studentStatusMessages.academicQualification;
 
         const { highestLevelOfEducation, levelOfStudies } = academicQualification;
 
@@ -81,14 +87,14 @@ export class StudentsHelperService {
             || (highestLevelOfEducation === ELevelOfEducation.Grade12 && !grade12Completed)
             || (highestLevelOfEducation === ELevelOfEducation.Grade10 && !grade10Completed)
         ) {
-            return 'Academic qualification incomplete';
+            return studentStatusMessages.academicQualification;
         }
 
-        if (!documents) return 'Documents incomplete';
+        if (!documents) return studentStatusMessages.documents;
 
         const { cv, gradeTenMarksheet, gradeTwelveMarksheet, passport, ielts, recommendationLetters } = documents;
 
-        if (!cv || !gradeTenMarksheet || !gradeTwelveMarksheet || !passport || !ielts || !recommendationLetters.length) return 'Documents incomplete';
+        if (!cv || !gradeTenMarksheet || !gradeTwelveMarksheet || !passport || !ielts || !recommendationLetters.length) return studentStatusMessages.documents;
 
         return "";
     }

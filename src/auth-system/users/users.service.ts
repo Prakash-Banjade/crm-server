@@ -43,6 +43,9 @@ export class UsersService extends BaseRepository {
   async findAll(queryDto: UsersQueryDto, currentUser: AuthUser) {
     const queryBuilder = this.getRepository(User).createQueryBuilder('user');
 
+    // when super_admin queries this route, organizationId is provided in query params not in currentUser
+    const organizationId = currentUser.role === Role.SUPER_ADMIN ? queryDto.organizationId : currentUser.organizationId;
+
     queryBuilder
       .orderBy("user.createdAt", queryDto.order)
       .offset(queryDto.skip)
@@ -53,8 +56,8 @@ export class UsersService extends BaseRepository {
         queryDto.q && qb.andWhere("account.lowerCasedFullName ILIKE :search", { search: `${queryDto.q}%` });
       }))
 
-    if (currentUser.organizationId) {
-      queryBuilder.andWhere('organization.id = :organizationId', { organizationId: currentUser.organizationId });
+    if (organizationId) {
+      queryBuilder.andWhere('organization.id = :organizationId', { organizationId: organizationId });
     }
 
     queryBuilder.select([
@@ -64,6 +67,7 @@ export class UsersService extends BaseRepository {
       'account.email as email',
       'account.role as role',
       'user.createdAt as "createdAt"',
+      'account.blacklistedAt as "blacklistedAt"',
     ])
 
     return paginatedRawData(queryDto, queryBuilder);

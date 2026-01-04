@@ -54,6 +54,12 @@ export class CourseQueryDto extends QueryDto {
     @ApiPropertyOptional()
     @IsString({ each: true })
     @IsOptional()
+    @Transform(({ value }) => value.split(','))
+    universityIds?: string[];
+
+    @ApiPropertyOptional()
+    @IsString({ each: true })
+    @IsOptional()
     @Transform(({ value }) => {
         if (value) return value.split('|'); // split by | because, universities name can have comma(,) which break downs the university name and no data is returned
         return []
