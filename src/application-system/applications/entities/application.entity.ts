@@ -5,7 +5,7 @@ import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from "typeorm";
 import { EApplicationPriority, EApplicationStatus } from "../interface";
 import { Course } from "src/course-system/courses/entities/course.entity";
 import { Account } from "src/auth-system/accounts/entities/account.entity";
-import { Conversation } from "src/application-system/conversations/entities/conversation.entity";
+import { Conversation } from "src/application-system/applications/entities/conversation.entity";
 
 @Entity()
 @Unique(['student', 'course', 'year', 'intake'])

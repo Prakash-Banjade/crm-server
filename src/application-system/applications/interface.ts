@@ -7,7 +7,7 @@ export enum EApplicationPriority {
 
 export enum EConversationType {
     Admin = 'admin',
-    student = 'student',
+    Student = 'student',
 }
 
 export enum EApplicationStatus {

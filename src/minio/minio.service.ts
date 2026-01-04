@@ -188,6 +188,7 @@ export class MinioService {
      * Moves a temporary file to a permanent location
      * @param tempKey The temporary key of the file
      * @param folder The folder to move the file to
+     * @returns The permanent key of the file
      */
     async moveFileToPermanent(tempKeyOrUrl: string, folder: string = ''): Promise<string> {
         // 1. Extract the key if a full URL was passed

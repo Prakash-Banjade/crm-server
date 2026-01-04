@@ -1,4 +1,4 @@
-import { Conversation } from "src/application-system/conversations/entities/conversation.entity";
+import { Conversation } from "src/application-system/applications/entities/conversation.entity";
 import { Account } from "src/auth-system/accounts/entities/account.entity";
 import { BaseEntity } from "src/common/entities/base.entity";
 import { Column, Entity, ManyToOne } from "typeorm";

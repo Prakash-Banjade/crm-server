@@ -10,6 +10,7 @@ import { CoursesService } from 'src/course-system/courses/courses.service';
 import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { ApplicationQueryDto } from './dto/application-query.dto';
 import paginatedData from 'src/utils/paginatedData';
+import { EConversationType } from './interface';
 
 @Injectable()
 export class ApplicationsService {
@@ -47,7 +48,10 @@ export class ApplicationsService {
       year: dto.year,
       intake: dto.intake,
       createdBy,
-      ackNo: await this.generateAckNo()
+      ackNo: await this.generateAckNo(),
+      conversations: [{ // immediately create a conversation for admin
+        type: EConversationType.Admin,
+      }]
     });
 
     await this.applicationRepo.save(application);
@@ -130,7 +134,7 @@ export class ApplicationsService {
       },
       relations: {
         course: {
-          university: true
+          university: { country: true }
         },
         conversations: true
       },
@@ -171,15 +175,34 @@ export class ApplicationsService {
   }
 
   async update(id: string, dto: UpdateApplicationDto, currentUser: AuthUser) {
-    const existing = await this.findOne(id, currentUser);
+    const existing = await this.applicationRepo.findOne({
+      where: {
+        id,
+        createdBy: {
+          organization: { id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId }
+        }
+      },
+      select: {
+        id: true,
+        priority: true,
+        status: true,
+      }
+    })
 
+    if (!existing) throw new NotFoundException('Application not found')
 
+    Object.assign(existing, {
+      priority: currentUser.role === Role.ADMIN ? dto.priority : existing.priority, // only admin can update priority
+      status: currentUser.role === Role.SUPER_ADMIN ? dto.status : existing.status, // only super admin can update status
+    })
 
-    return `This action updates a #${id} application`;
+    await this.applicationRepo.save(existing)
+
+    return { message: 'Application updated' };
   }
 
   async remove(id: string) {
     await this.applicationRepo.delete(id);
-    return { message: 'Application deleted successfully' }
+    return { message: 'Application deleted' }
   }
 }

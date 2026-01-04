@@ -1,4 +1,15 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateApplicationDto } from './create-application.dto';
+import { IsEnum, IsOptional } from "class-validator";
+import { EApplicationPriority, EApplicationStatus } from "../interface";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 
-export class UpdateApplicationDto extends PartialType(CreateApplicationDto) {}
+export class UpdateApplicationDto {
+    @ApiPropertyOptional({ enum: EApplicationPriority })
+    @IsEnum(EApplicationPriority)
+    @IsOptional()
+    priority?: EApplicationPriority;
+
+    @ApiPropertyOptional({ enum: EApplicationStatus })
+    @IsEnum(EApplicationStatus)
+    @IsOptional()
+    status?: EApplicationStatus;
+}
