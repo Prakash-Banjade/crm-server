@@ -1,36 +1,44 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsDateString, IsOptional, IsString } from "class-validator";
+import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 import { QueryDto } from "src/common/dto/query.dto";
 import { EMonth } from "src/common/types";
-import { EApplicationStatus } from "../interface";
+import { EApplicationPriority, EApplicationStatus } from "../interface";
 
 export class ApplicationQueryDto extends QueryDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    createdFrom: string;
+    dateFrom: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    createdTo: string;
+    dateTo: string;
 
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
+        try {
+            const val = JSON.parse(decodeURIComponent(value || "[]"))
+            return val.map((item: { value: string }) => item.value).filter(Boolean)
+        } catch (e) {
+            return []
+        }
     })
-    countryNames: string[];
+    university: string[];
 
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
+        try {
+            const val = JSON.parse(decodeURIComponent(value || "[]"))
+            return val.map((item: { value: string }) => item.value).filter(Boolean)
+        } catch (e) {
+            return []
+        }
     })
-    universityNames: string[];
+    course: string[];
 
     @ApiPropertyOptional({ enum: EMonth })
     @IsOptional()
@@ -50,21 +58,13 @@ export class ApplicationQueryDto extends QueryDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
-    statuses: EApplicationStatus[];
+    @IsEnum(EApplicationStatus)
+    status: EApplicationStatus;
 
     @ApiPropertyOptional()
-    @IsString()
     @IsOptional()
-    courseName: string;
-
-    @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
-    studentName: string;
+    @IsEnum(EApplicationPriority)
+    priority: EApplicationPriority;
 
     @ApiPropertyOptional()
     @IsString()

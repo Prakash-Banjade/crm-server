@@ -99,13 +99,20 @@ export class ApplicationsService {
       .leftJoin('application.course', 'course')
       .leftJoin('course.university', 'university')
 
-    if (currentUser.organizationId) {
-      queryBuilder.andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId })
-    }
+    if (currentUser.organizationId) queryBuilder.andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId });
+    if (queryDto.q) queryBuilder.andWhere('student.fullName ILIKE :q', { q: `${queryDto.q}%` });
+    if (queryDto.studentId) queryBuilder.andWhere('student.id = :studentId', { studentId: queryDto.studentId });
+    if (queryDto.ackNo) queryBuilder.andWhere('application.ackNo = :ackNo', { ackNo: queryDto.ackNo });
+    if (queryDto.dateFrom) queryBuilder.andWhere('application.createdAt >= :dateFrom', { dateFrom: queryDto.dateFrom });
+    if (queryDto.dateTo) queryBuilder.andWhere('application.createdAt <= :dateTo', { dateTo: queryDto.dateTo });
 
-    if (queryDto.studentId) {
-      queryBuilder.andWhere('student.id = :studentId', { studentId: queryDto.studentId })
-    }
+    if (queryDto.intakeMonths?.length > 0) queryBuilder.andWhere('application.intake IN (:...intakeMonths)', { intakeMonths: queryDto.intakeMonths });
+    if (queryDto.intakeYears?.length > 0) queryBuilder.andWhere('application.year IN (:...intakeYears)', { intakeYears: queryDto.intakeYears });
+    if (queryDto.status) queryBuilder.andWhere('application.status = :status', { status: queryDto.status });
+    if (queryDto.priority) queryBuilder.andWhere('application.priority = :priority', { priority: queryDto.priority });
+
+    if (queryDto.university?.length > 0) queryBuilder.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.university });
+    if (queryDto.course?.length > 0) queryBuilder.andWhere('course.id IN (:...courseIds)', { courseIds: queryDto.course });
 
     queryBuilder.select([
       'application.id',

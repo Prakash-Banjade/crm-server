@@ -125,7 +125,11 @@ export class CoursesService {
       .orderBy(queryDto.sortBy, queryDto.order)
       .offset(queryDto.skip)
       .limit(queryDto.take)
-      .leftJoin('course.university', 'university')
+      .leftJoin('course.university', 'university');
+
+    if (queryDto.q) {
+      queryBuilder.andWhere('course.name ILIKE :search', { search: `${queryDto.q}%` })
+    }
 
     if (queryDto.universityIds?.length) {
       queryBuilder.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.universityIds })

@@ -64,20 +64,15 @@ export class StudentsService {
       .skip(queryDto.skip)
       .take(queryDto.take)
       .leftJoin('student.createdBy', 'createdBy')
-      .leftJoin('student.applications', 'application')
       .loadRelationCountAndMap('student.applicationsCount', 'student.applications')
 
-    if (queryDto.q) {
-      queryBuilder.andWhere('student.fullName ILIKE :search', { search: `${queryDto.q}%` })
-    }
+    queryBuilder.andWhere(queryDto.onlyLeads ? 'student.asLead IS NOT NULL' : 'student.asLead IS NULL');
 
-    if (currentUser.organizationId) {
-      queryBuilder.andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId })
-    }
-
-    queryBuilder.andWhere(
-      queryDto.onlyLeads ? 'student.asLead IS NOT NULL' : 'student.asLead IS NULL'
-    );
+    if (queryDto.q) queryBuilder.andWhere('student.fullName ILIKE :search', { search: `${queryDto.q}%` });
+    if (currentUser.organizationId) queryBuilder.andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId });
+    if (queryDto.refNo) queryBuilder.andWhere('student.refNo = :refNo', { refNo: queryDto.refNo });
+    if (queryDto.dateFrom) queryBuilder.andWhere('student.createdAt >= :dateFrom', { dateFrom: queryDto.dateFrom });
+    if (queryDto.dateTo) queryBuilder.andWhere('student.createdAt <= :dateTo', { dateTo: queryDto.dateTo });
 
     queryBuilder.select([
       'student.id',
@@ -103,32 +98,6 @@ export class StudentsService {
   }
 
   async findOne(id: string, currentUser: AuthUser, select?: FindOptionsSelect<Student>) {
-    // const existing = await this.studentsRepo.findOne({
-    //   where: {
-    //     id,
-    //     createdBy: {
-    //       organization: {
-    //         id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId
-    //       }
-    //     }
-    //   },
-    //   select: select ?? {
-    //     id: true,
-    //     refNo: true,
-    //     firstName: true,
-    //     lastName: true,
-    //     fullName: true,
-    //     email: true,
-    //     createdAt: true,
-    //     phoneNumber: true,
-    //     statusMessage: true,
-    //     personalInfo: true,
-    //     academicQualification: true,
-    //     documents: true,
-    //     workExperiences: true,
-    //   }
-    // });
-
     const queryBuilder = this.studentsRepo.createQueryBuilder('student')
       .where('student.id = :id', { id })
       .loadRelationCountAndMap('student.applicationsCount', 'student.applications')

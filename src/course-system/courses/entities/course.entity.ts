@@ -17,6 +17,7 @@ export class Course extends BaseEntity {
     @ManyToOne(() => Category, category => category.courses, { onDelete: 'RESTRICT', nullable: false })
     category: Category;
 
+    @Index()
     @ManyToOne(() => University, university => university.courses, { onDelete: 'RESTRICT', nullable: false })
     university: University;
 
