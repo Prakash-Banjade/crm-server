@@ -5,7 +5,7 @@ import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CheckAbilities } from 'src/common/decorators/abilities.decorator';
 import { Application } from './entities/application.entity';
-import { Action, type AuthUser } from 'src/common/types';
+import { Action, Role, type AuthUser } from 'src/common/types';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { ApplicationQueryDto } from './dto/application-query.dto';
 
@@ -33,6 +33,12 @@ export class ApplicationsController {
   @CheckAbilities({ subject: Application, action: Action.READ })
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() currentUser: AuthUser) {
     return this.applicationsService.findOne(id, currentUser);
+  }
+
+  @Patch(':id/payment-verify')
+  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.UPDATE })
+  verifyPaymentDocument(@Param('id', ParseUUIDPipe) id: string) {
+    return this.applicationsService.verifyPaymentDocument(id);
   }
 
   @Patch(':id')

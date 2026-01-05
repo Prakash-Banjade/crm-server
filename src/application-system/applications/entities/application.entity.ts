@@ -37,7 +37,10 @@ export class Application extends BaseEntity {
     course: Course;
 
     @Column({ type: 'text', nullable: true })
-    paymentDocument: string | null;
+    paymentDocument: string | null; // file
+
+    @Column({ type: 'timestamp', nullable: true })
+    paymentVerifiedAt: Date | null;
 
     @ManyToOne(() => Account, account => account.createdApplications, { onDelete: 'SET NULL', nullable: true })
     createdBy: Account | null

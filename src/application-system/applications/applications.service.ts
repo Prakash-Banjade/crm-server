@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +11,7 @@ import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { ApplicationQueryDto } from './dto/application-query.dto';
 import paginatedData from 'src/utils/paginatedData';
 import { EConversationType } from './interface';
+import { MinioService } from 'src/minio/minio.service';
 
 @Injectable()
 export class ApplicationsService {
@@ -19,9 +20,12 @@ export class ApplicationsService {
     private readonly studentsService: StudentsService,
     private readonly coursesService: CoursesService,
     private readonly accountsService: AccountsService,
+    private readonly minioService: MinioService
   ) { }
 
   async create(dto: CreateApplicationDto, currentUser: AuthUser) {
+    console.log(dto.courseId)
+
     const duplicateApplication = await this.applicationRepo.findOne({
       where: {
         student: { id: dto.studentId },
@@ -54,9 +58,9 @@ export class ApplicationsService {
       }]
     });
 
-    await this.applicationRepo.save(application);
+    const saved = await this.applicationRepo.save(application);
 
-    return { message: 'Application created successfully' }
+    return { message: 'Application created successfully', applicationId: saved.id }
   }
 
   async generateAckNo() {
@@ -146,6 +150,7 @@ export class ApplicationsService {
         year: true,
         status: true,
         paymentDocument: true,
+        paymentVerifiedAt: true,
         priority: true,
         conversations: {
           id: true,
@@ -156,6 +161,8 @@ export class ApplicationsService {
           id: true,
           name: true,
           courseUrl: true,
+          applicationFee: true,
+          currency: true,
           university: {
             id: true,
             name: true,
@@ -186,19 +193,45 @@ export class ApplicationsService {
         id: true,
         priority: true,
         status: true,
+        paymentDocument: true,
       }
     })
 
     if (!existing) throw new NotFoundException('Application not found')
 
+    const paymentDocument = dto.paymentDocument ? await this.minioService.moveFileToPermanent(dto.paymentDocument) : null;
+
     Object.assign(existing, {
       priority: currentUser.role === Role.ADMIN ? dto.priority : existing.priority, // only admin can update priority
       status: currentUser.role === Role.SUPER_ADMIN ? dto.status : existing.status, // only super admin can update status
-    })
+      paymentDocument: dto.paymentDocument === null && currentUser.role !== Role.SUPER_ADMIN
+        ? existing.paymentDocument
+        : paymentDocument
+    });
 
     await this.applicationRepo.save(existing)
 
     return { message: 'Application updated' };
+  }
+
+  async verifyPaymentDocument(id: string) {
+    const application = await this.applicationRepo.findOne({
+      where: { id },
+      select: {
+        id: true, paymentDocument: true, paymentVerifiedAt: true
+      }
+    });
+
+    if (!application) throw new NotFoundException('Application not found');
+    if (!application.paymentDocument) throw new ForbiddenException('No payment document to verify');
+    if (!!application.paymentVerifiedAt) throw new BadRequestException('Payment document already verified');
+
+
+    application.paymentVerifiedAt = new Date();
+
+    await this.applicationRepo.save(application);
+
+    return { message: "Payment document verified" }
   }
 
   async remove(id: string) {

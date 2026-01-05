@@ -9,7 +9,7 @@ export class CreateMessageDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
-    @MaxLength(250, { message: 'Content must be at most 250 characters' })
+    @MaxLength(500, { message: 'Content must be at most 500 characters' })
     @ValidateIf((dto: CreateMessageDto) => dto.files?.length === 0)
     content: string;
 

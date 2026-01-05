@@ -217,7 +217,7 @@ export class CoursesService {
   async findCourseByIntake(id: string, intake: EMonth) {
     const course = await this.courseRepository.createQueryBuilder('course')
       .where('course.id = :id', { id })
-      .where(':intake = ANY(course.intakes)', { intake })
+      .andWhere(':intake = ANY(course.intakes)', { intake })
       .select(['course.id'])
       .getOne();
 
