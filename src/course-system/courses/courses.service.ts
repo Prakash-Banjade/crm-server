@@ -222,7 +222,7 @@ export class CoursesService {
     const course = await this.courseRepository.createQueryBuilder('course')
       .where('course.id = :id', { id })
       .andWhere(':intake = ANY(course.intakes)', { intake })
-      .select(['course.id'])
+      .select(['course.id', 'course.name'])
       .getOne();
 
     if (!course) throw new NotFoundException('Course not found')

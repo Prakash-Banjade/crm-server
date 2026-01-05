@@ -9,8 +9,11 @@ import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { StudentQueryDto } from './dto/students-query.dto';
 import paginatedData from 'src/utils/paginatedData';
 import { Account } from 'src/auth-system/accounts/entities/account.entity';
-import { MinioService } from 'src/minio/minio.service';
 import { StudentsHelperService } from './students-helper.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ENotificationEvent } from 'src/notification-system/notifications/notifications.service';
+import { CreateNotificationDto } from 'src/notification-system/notifications/dto/create-notification.dto';
+import { ENotificationType } from 'src/notification-system/notifications/entities/notification.entity';
 
 @Injectable()
 export class StudentsService {
@@ -18,7 +21,7 @@ export class StudentsService {
     @InjectRepository(Student) private readonly studentsRepo: Repository<Student>,
     private readonly studentsHelperService: StudentsHelperService,
     private readonly accountsService: AccountsService,
-    private readonly minioService: MinioService
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(dto: CreateStudentDto, currentUser: AuthUser) {
@@ -37,7 +40,14 @@ export class StudentsService {
 
     await this.studentsRepo.save(student);
 
-    // Todo: send in-app notification
+    // create notifications
+    this.eventEmitter.emit(ENotificationEvent.CREATE, new CreateNotificationDto({
+      title: 'New Student Registered',
+      type: ENotificationType.STUDENT_CREATED,
+      description: `A new student ${student.firstName} ${student.lastName} has been registered by ${currentUser.firstName} ${currentUser.lastName} of company ${currentUser.organizationName}.`,
+      url: `/students/${student.id}`,
+      currentUser
+    }));
 
     return { message: 'Student created successfully' }
   }

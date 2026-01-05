@@ -15,6 +15,7 @@ import { Student } from "src/students/entities/student.entity";
 import { Application } from "src/application-system/applications/entities/application.entity";
 import { Message } from "src/application-system/messages/entities/message.entity";
 import { Booking } from "src/bookings/entities/booking.entity";
+import { NotificationRecipient } from "src/notification-system/notification-recipients/entities/notification-recipient.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -113,4 +114,7 @@ export class Account extends BaseEntity {
 
     @OneToMany(() => Booking, booking => booking.createdBy)
     createdBookings: Booking[]
+
+    @OneToMany(() => NotificationRecipient, notification => notification.recipient)
+    receivedNotifications: NotificationRecipient[]
 }

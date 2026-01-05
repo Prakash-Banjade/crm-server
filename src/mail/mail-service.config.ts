@@ -7,4 +7,5 @@ export interface ITemplates<T = any> {
     resetPassword: TemplateDelegate<T>;
     userCredentials: TemplateDelegate<T>;
     twoFaOtp: TemplateDelegate<T>;
+    notification: TemplateDelegate<T>;
 }

@@ -39,3 +39,13 @@ export class UserCredentialsEventDto {
         Object.assign(this, dto);
     }
 }
+
+export class NotificationMailEvent {
+    emails: string[];
+    title: string;
+    description: string;
+    url: string;
+    constructor(dto: NotificationMailEvent) {
+        Object.assign(this, dto)
+    }
+}

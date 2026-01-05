@@ -12,6 +12,10 @@ import { ApplicationQueryDto } from './dto/application-query.dto';
 import paginatedData from 'src/utils/paginatedData';
 import { EConversationType } from './interface';
 import { MinioService } from 'src/minio/minio.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ENotificationEvent } from 'src/notification-system/notifications/notifications.service';
+import { CreateNotificationDto } from 'src/notification-system/notifications/dto/create-notification.dto';
+import { ENotificationType } from 'src/notification-system/notifications/entities/notification.entity';
 
 @Injectable()
 export class ApplicationsService {
@@ -20,12 +24,11 @@ export class ApplicationsService {
     private readonly studentsService: StudentsService,
     private readonly coursesService: CoursesService,
     private readonly accountsService: AccountsService,
-    private readonly minioService: MinioService
+    private readonly minioService: MinioService,
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(dto: CreateApplicationDto, currentUser: AuthUser) {
-    console.log(dto.courseId)
-
     const duplicateApplication = await this.applicationRepo.findOne({
       where: {
         student: { id: dto.studentId },
@@ -38,7 +41,7 @@ export class ApplicationsService {
 
     if (duplicateApplication) throw new ConflictException('Application already exists');
 
-    const student = await this.studentsService.findOne(dto.studentId, currentUser, { id: true, statusMessage: true })
+    const student = await this.studentsService.findOne(dto.studentId, currentUser, { id: true, statusMessage: true, firstName: true, lastName: true })
     if (student.statusMessage.length > 0) throw new ForbiddenException('Not allowed to apply yet. ' + student.statusMessage);
 
     const course = await this.coursesService.findCourseByIntake(dto.courseId, dto.intake)
@@ -59,6 +62,15 @@ export class ApplicationsService {
     });
 
     const saved = await this.applicationRepo.save(application);
+
+    // create notifications
+    this.eventEmitter.emit(ENotificationEvent.CREATE, new CreateNotificationDto({
+      title: 'New Application Submitted',
+      type: ENotificationType.APPLICATION_SUBMITTED,
+      description: `A new application of ${student.firstName} ${student.lastName} has been submitted for course ${course.name}`,
+      url: `/students/application/${student.id}?tab=applications&applicationId=${application.id}`,
+      currentUser
+    }));
 
     return { message: 'Application created successfully', applicationId: saved.id }
   }
