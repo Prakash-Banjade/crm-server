@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { fromEvent } from 'rxjs';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { DataSource, Not } from 'typeorm';
 import { REQUEST } from '@nestjs/core';
@@ -17,6 +18,7 @@ import { paginatedRawData } from 'src/utils/paginatedData';
 
 export const enum ENotificationEvent {
   CREATE = 'notification.create',
+  PUSH_NOTIFICATION_EVENT = 'notification.push',
 }
 
 @Injectable({ scope: Scope.REQUEST })
@@ -41,7 +43,7 @@ export class NotificationsService extends BaseRepository {
       }))
     });
 
-    await this.getRepository<Notification>(Notification).save(notification);
+    const savedNotification = await this.getRepository<Notification>(Notification).save(notification);
 
     this.eventEmitter.emit(MailEvents.SEND_NOTIFICATION, new NotificationMailEvent({
       description: createNotificationDto.description || "",
@@ -49,6 +51,21 @@ export class NotificationsService extends BaseRepository {
       title: createNotificationDto.title,
       url: this.envService.CLIENT_URL + createNotificationDto.url,
     }))
+
+    // ---------------------------------------------------------
+    // NEW: Emit an event specifically for SSE
+    // We emit one event per recipient so we can listen individually
+    // ---------------------------------------------------------
+    accounts.forEach(recipient => {
+      this.eventEmitter.emit(
+        `${ENotificationEvent.PUSH_NOTIFICATION_EVENT}.${recipient.id}`,
+        {
+          unreadCount: 1, // You might want to calculate the actual new count here or just increment on frontend
+          notification: savedNotification
+        }
+      );
+    });
+
 
     return { message: 'Notification created' };
   }
@@ -158,5 +175,9 @@ export class NotificationsService extends BaseRepository {
       unreadCount: +notifications.unreadCount,
     };
 
+  }
+
+  subscribeToEvents(currentUser: AuthUser) {
+    return fromEvent(this.eventEmitter, `${ENotificationEvent.PUSH_NOTIFICATION_EVENT}.${currentUser.accountId}`);
   }
 }

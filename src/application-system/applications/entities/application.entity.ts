@@ -29,7 +29,8 @@ export class Application extends BaseEntity {
     @Column({ type: 'enum', enum: EApplicationPriority, default: EApplicationPriority.Medium })
     priority: EApplicationPriority;
 
-    @Column({ type: 'enum', enum: EApplicationStatus, default: EApplicationStatus.Application_In_Progress })
+    @Index()
+    @Column({ type: 'enum', enum: EApplicationStatus, default: EApplicationStatus.Received_Application_At_Abhyam })
     status: EApplicationStatus;
 
     @Index()

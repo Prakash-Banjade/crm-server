@@ -31,6 +31,7 @@ import { ApplicationSystemModule } from './application-system/application-system
 import { AbilitiesGuard } from './common/guards/abilities.guard';
 import { CaslModule } from './auth-system/casl/casl.module';
 import { NotificationSystemModule } from './notification-system/notification-system.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -91,7 +92,8 @@ import { NotificationSystemModule } from './notification-system/notification-sys
     BdeModule,
     StudentsModule,
     ApplicationSystemModule,
-    NotificationSystemModule
+    NotificationSystemModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

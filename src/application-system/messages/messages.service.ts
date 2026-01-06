@@ -39,7 +39,7 @@ export class MessagesService {
           student: true
         }
       },
-      select: { id: true, application: { student: { id: true, firstName: true, lastName: true } } }
+      select: { id: true, application: { id: true, student: { id: true, firstName: true, lastName: true } } }
     });
 
     if (!conversation) throw new NotFoundException('Conversation not found');
@@ -57,6 +57,7 @@ export class MessagesService {
 
     // create notifications
     const student = conversation.application?.student;
+
     this.eventEmitter.emit(ENotificationEvent.CREATE, new CreateNotificationDto({
       title: 'New conversation message',
       type: ENotificationType.CONVERSATION,
