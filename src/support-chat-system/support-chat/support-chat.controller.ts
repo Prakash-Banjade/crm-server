@@ -18,4 +18,10 @@ export class SupportChatController {
     getAll(@Query() queryDto: QueryDto) {
         return this.supportChatService.getAll(queryDto);
     }
+
+    @Get(":id")
+    @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
+    findOne(@Param("id", ParseUUIDPipe) id: string) {
+        return this.supportChatService.findOne(id);
+    }
 }

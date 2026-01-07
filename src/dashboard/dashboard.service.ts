@@ -235,7 +235,8 @@ export class DashboardService extends BaseRepository {
         'scm.createdAt as "createdAt"',
         'sender.lowerCasedFullName as "sender"',
         'sender.role as "senderRole"',
-        'organization.name as "organizationName"'
+        'organization.name as "organizationName"',
+        'supportChat.id as "supportChatId"'
       ])
       .getRawMany();
   }

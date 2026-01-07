@@ -34,6 +34,7 @@ export class SupportChatService {
                         .select("msg.supportChatId", "supportchatid")     // lowercase
                         .addSelect("msg.content", "latestcontent")        // lowercase
                         .addSelect("msg.createdAt", "latestcreatedat")    // lowercase
+                        .addSelect("msg.seenAt", "latestseenat")    // lowercase
                         .from(SupportChatMessage, "msg")
                         .where(qb2 => {
                             const sub = qb2
@@ -58,7 +59,8 @@ export class SupportChatService {
                 'organization.id as "organizationId"',
                 'organization.name as "organizationName"',
                 'lm.latestcontent as "latestMessageContent"',
-                'lm.latestcreatedat as "latestMessageCreatedAt"'
+                'lm.latestcreatedat as "latestMessageCreatedAt"',
+                'lm.latestseenat as "latestMessageSeenAt"'
             ])
             .orderBy("lm.latestcreatedat", "DESC")
 
@@ -79,6 +81,31 @@ export class SupportChatService {
         if (supportChat) return supportChat;
 
         return this.create(account);
+    }
+
+    async findOne(id: string): Promise<SupportChat> {
+        const existing = await this.supportChatsRepo.findOne({
+            where: { id },
+            relations: {
+                account: { organization: true },
+            },
+            select: {
+                id: true,
+                account: {
+                    id: true,
+                    lowerCasedFullName: true,
+                    role: true,
+                    organization: {
+                        id: true,
+                        name: true,
+                    }
+                }
+            }
+        });
+
+        if (!existing) throw new NotFoundException("Support chat not found");
+
+        return existing;
     }
 
     async getById(id: string): Promise<SupportChat> {

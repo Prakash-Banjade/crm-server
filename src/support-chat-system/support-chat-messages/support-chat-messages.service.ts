@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSupportChatMessageDto } from './dto/create-support-chat-message.dto';
 import { UpdateSupportChatMessageDto } from './dto/update-support-chat-message.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -41,6 +41,8 @@ export class SupportChatMessagesService {
   findAll(queryDto: SupportChatMessagesQueryDto, currentUser: AuthUser) {
     const queryBuilder = this.supportChatMessagesRepo.createQueryBuilder("message")
       .orderBy("message.createdAt", "ASC")
+      .take(queryDto.take)
+      .skip(queryDto.skip)
       .leftJoin('message.sender', 'sender');
 
     if (currentUser.role !== Role.SUPER_ADMIN) {
@@ -60,9 +62,23 @@ export class SupportChatMessagesService {
       'message.createdAt',
       'sender.id',
       'sender.lowerCasedFullName',
-      'sender.role'
+      'sender.role',
+      'message.seenAt'
     ]);
 
     return paginatedData(queryDto, queryBuilder);
+  }
+
+  async markAsSeen(messageId: string) {
+    const message = await this.supportChatMessagesRepo.findOne({
+      where: { id: messageId },
+      select: { id: true }
+    });
+    if (!message) throw new NotFoundException("Message not found");
+
+    message.seenAt = new Date();
+    await this.supportChatMessagesRepo.save(message);
+
+    return { message: "Marked as seen" }
   }
 }

@@ -15,4 +15,8 @@ export class SupportChatMessage extends BaseEntity {
     @Index()
     @ManyToOne(() => Account, account => account.supportChatMessages, { onDelete: 'CASCADE', nullable: false })
     sender: Account;
+
+    /** Only for super admin, seenAt is used to track super admin's seen status */
+    @Column({ type: 'timestamp', nullable: true })
+    seenAt: Date | null;
 }
