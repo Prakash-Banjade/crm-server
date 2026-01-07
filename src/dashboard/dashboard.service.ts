@@ -12,6 +12,7 @@ import { Organization } from 'src/auth-system/organizations/entities/organizatio
 import { EApplicationStatus } from 'src/application-system/applications/interface';
 import { ConfigService } from '@nestjs/config';
 import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
+import { SupportChatMessage } from 'src/support-chat-system/support-chat-messages/entities/support-chat-message.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DashboardService extends BaseRepository {
@@ -27,7 +28,7 @@ export class DashboardService extends BaseRepository {
   }
 
   async getCounts(currentUser: AuthUser) {
-    const organizationId = currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.role;
+    const organizationId = currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId;
 
     const today = new Date();
     const currentMonthStart = startOfMonth(today);
@@ -136,7 +137,7 @@ export class DashboardService extends BaseRepository {
   };
 
   async getApplicationPipeline(currentUser: AuthUser) {
-    const organizationId = currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.role;
+    const organizationId = currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId;
 
     const tatalActiveApplicationsCount = this.getRepository<Application>(Application).createQueryBuilder('application')
       .leftJoin("application.createdBy", "createdBy")
@@ -219,5 +220,23 @@ export class DashboardService extends BaseRepository {
       applicationsVisaRejected: response[4],
       applicationsInClosure: response[5]
     }
+  }
+
+  async getRecentSupportChatMessages() {
+    return this.getRepository(SupportChatMessage).createQueryBuilder("scm")
+      .leftJoin("scm.supportChat", "supportChat")
+      .leftJoin("scm.sender", "sender")
+      .leftJoin("sender.organization", "organization")
+      .orderBy("scm.createdAt", "DESC")
+      .take(5)
+      .where("sender.role != :role", { role: Role.SUPER_ADMIN })
+      .select([
+        'scm.id as "id"',
+        'scm.createdAt as "createdAt"',
+        'sender.lowerCasedFullName as "sender"',
+        'sender.role as "senderRole"',
+        'organization.name as "organizationName"'
+      ])
+      .getRawMany();
   }
 }

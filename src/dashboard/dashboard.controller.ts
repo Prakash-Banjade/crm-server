@@ -23,4 +23,10 @@ export class DashboardController {
     return this.dashboardService.getApplicationPipeline(currentUser);
   }
 
+  @Get('support-chat-messages')
+  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
+  getRecentSupportChatMessages() {
+    return this.dashboardService.getRecentSupportChatMessages();
+  }
+
 }

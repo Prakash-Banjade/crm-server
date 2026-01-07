@@ -16,6 +16,8 @@ import { Application } from "src/application-system/applications/entities/applic
 import { Message } from "src/application-system/messages/entities/message.entity";
 import { Booking } from "src/bookings/entities/booking.entity";
 import { NotificationRecipient } from "src/notification-system/notification-recipients/entities/notification-recipient.entity";
+import { SupportChat } from "src/support-chat-system/support-chat/entities/support-chat.entity";
+import { SupportChatMessage } from "src/support-chat-system/support-chat-messages/entities/support-chat-message.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -117,4 +119,10 @@ export class Account extends BaseEntity {
 
     @OneToMany(() => NotificationRecipient, notification => notification.recipient)
     receivedNotifications: NotificationRecipient[]
+
+    @OneToOne(() => SupportChat, supportChat => supportChat.account, { nullable: true })
+    supportChat: SupportChat | null;
+
+    @OneToMany(() => SupportChatMessage, message => message.sender)
+    supportChatMessages: SupportChatMessage[];
 }

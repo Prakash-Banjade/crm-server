@@ -32,6 +32,7 @@ import { AbilitiesGuard } from './common/guards/abilities.guard';
 import { CaslModule } from './auth-system/casl/casl.module';
 import { NotificationSystemModule } from './notification-system/notification-system.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SupportChatSystemModule } from './support-chat-system/support-chat-system.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ApplicationSystemModule,
     NotificationSystemModule,
     DashboardModule,
+    SupportChatSystemModule,
   ],
   controllers: [AppController],
   providers: [
