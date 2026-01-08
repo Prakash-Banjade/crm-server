@@ -22,14 +22,12 @@ export class RegionalInchargesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all regional incharges' })
-  @CheckAbilities({ action: Action.READ, subject: Role.SUPER_ADMIN })
   findAll(@Query() queryDto: QueryDto) {
     return this.regionalInchargesService.findAll(queryDto);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get regional incharge by id' })
-  @CheckAbilities({ action: Action.READ, subject: Role.SUPER_ADMIN })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.regionalInchargesService.findOne(id);
   }

@@ -1,9 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { Action, Role, type AuthUser } from 'src/common/types';
 import { CheckAbilities } from 'src/common/decorators/abilities.decorator';
+import { DashboardQueryDto } from './dashboard-query.dto';
 
 @ApiBearerAuth()
 @ApiTags('Dashboard')
@@ -19,8 +20,8 @@ export class DashboardController {
 
   @Get('application-pipeline')
   @CheckAbilities({ subject: Role.COUNSELOR, action: Action.READ })
-  getApplicationPipeline(@CurrentUser() currentUser: AuthUser) {
-    return this.dashboardService.getApplicationPipeline(currentUser);
+  getApplicationPipeline(@Query() queryDto: DashboardQueryDto, @CurrentUser() currentUser: AuthUser) {
+    return this.dashboardService.getApplicationPipeline(queryDto, currentUser);
   }
 
   @Get('support-chat-messages')

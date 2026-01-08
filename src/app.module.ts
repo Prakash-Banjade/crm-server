@@ -10,7 +10,7 @@ import { AuthSystemModule } from './auth-system/auth-system.module';
 import { EnvModule } from './env/env.module';
 import { MailModule } from './mail/mail.module';
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -108,6 +108,10 @@ import { SupportChatSystemModule } from './support-chat-system/support-chat-syst
       provide: APP_GUARD,
       useClass: AbilitiesGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    }
   ],
 })
 export class AppModule { }

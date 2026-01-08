@@ -14,4 +14,7 @@ export class RegionalIncharge extends BaseEntity {
 
     @Column("text", { nullable: true })
     profileImage: string | null;
+
+    @Column("text", { default: "" })
+    role: string;
 }

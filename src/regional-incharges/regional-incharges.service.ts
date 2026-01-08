@@ -58,6 +58,7 @@ export class RegionalInchargesService {
       'regionalIncharge.name',
       'regionalIncharge.email',
       'regionalIncharge.phone',
+      'regionalIncharge.role',
       'regionalIncharge.profileImage',
       'regionalIncharge.createdAt',
     ])
@@ -73,6 +74,7 @@ export class RegionalInchargesService {
         name: true,
         email: true,
         phone: true,
+        role: true,
         profileImage: true,
         createdAt: true,
       }
@@ -96,6 +98,7 @@ export class RegionalInchargesService {
 
     if (duplicate && duplicate.id !== id) throw new ConflictException('Duplicate email or phone');
 
+    console.log(dto.profileImage, (dto.profileImage !== existing.profileImage, !existing.profileImage))
     if (dto.profileImage && (dto.profileImage !== existing.profileImage || !existing.profileImage)) {
       existing.profileImage && await this.minioService.deleteFile(existing.profileImage);
       const profileImage = await this.minioService.moveFileToPermanent(dto.profileImage, this._imagePrefix);

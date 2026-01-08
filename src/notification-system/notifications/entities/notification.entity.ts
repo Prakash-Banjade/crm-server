@@ -7,6 +7,7 @@ export enum ENotificationType {
     STUDENT_CREATED = 'student_created',
     APPLICATION_STATUS_MODIFIED = 'application_status_modified',
     CONVERSATION = 'conversation',
+    SUPPORT_CHAT_MESSAGE = 'support_chat_message'
 }
 
 @Entity()

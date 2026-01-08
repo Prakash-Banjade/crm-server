@@ -1,21 +1,25 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSupportChatMessageDto } from './dto/create-support-chat-message.dto';
-import { UpdateSupportChatMessageDto } from './dto/update-support-chat-message.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SupportChatMessage } from './entities/support-chat-message.entity';
-import { Repository } from 'typeorm';
+import { IsNull, LessThanOrEqual, Repository } from 'typeorm';
 import { AuthUser, Role } from 'src/common/types';
 import { SupportChatService } from '../support-chat/support-chat.service';
 import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { SupportChatMessagesQueryDto } from './dto/support-chat-message-query.dto';
 import paginatedData from 'src/utils/paginatedData';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ENotificationEvent } from 'src/notification-system/notifications/notifications.service';
+import { CreateNotificationDto } from 'src/notification-system/notifications/dto/create-notification.dto';
+import { ENotificationType } from 'src/notification-system/notifications/entities/notification.entity';
 
 @Injectable()
 export class SupportChatMessagesService {
   constructor(
     @InjectRepository(SupportChatMessage) private readonly supportChatMessagesRepo: Repository<SupportChatMessage>,
     private readonly supportChatService: SupportChatService,
-    private readonly accountsService: AccountsService
+    private readonly accountsService: AccountsService,
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(dto: CreateSupportChatMessageDto, currentUser: AuthUser) {
@@ -35,12 +39,23 @@ export class SupportChatMessagesService {
 
     await this.supportChatMessagesRepo.save(message);
 
+    if (currentUser.role !== Role.SUPER_ADMIN) {
+      // send notification
+      this.eventEmitter.emit(ENotificationEvent.CREATE, new CreateNotificationDto({
+        title: 'New support request',
+        type: ENotificationType.SUPPORT_CHAT_MESSAGE,
+        description: `A new support request from ${currentUser.firstName} ${currentUser.lastName} of organization ${currentUser.organizationName}.`,
+        url: `/support-chat/${supportChat.id}`,
+        currentUser
+      }));
+    }
+
     return { message: "Sent" }
   }
 
   findAll(queryDto: SupportChatMessagesQueryDto, currentUser: AuthUser) {
     const queryBuilder = this.supportChatMessagesRepo.createQueryBuilder("message")
-      .orderBy("message.createdAt", "ASC")
+      .orderBy("message.createdAt", "DESC")
       .take(queryDto.take)
       .skip(queryDto.skip)
       .leftJoin('message.sender', 'sender');
@@ -72,12 +87,18 @@ export class SupportChatMessagesService {
   async markAsSeen(messageId: string) {
     const message = await this.supportChatMessagesRepo.findOne({
       where: { id: messageId },
-      select: { id: true }
+      relations: { supportChat: true },
+      select: { id: true, supportChat: { id: true } }
     });
     if (!message) throw new NotFoundException("Message not found");
 
-    message.seenAt = new Date();
-    await this.supportChatMessagesRepo.save(message);
+    // mark all the messages of support chat which are not seen yet
+    await this.supportChatMessagesRepo.update({
+      supportChat: { id: message.supportChat.id },
+      seenAt: IsNull(),
+    }, {
+      seenAt: new Date()
+    });
 
     return { message: "Marked as seen" }
   }

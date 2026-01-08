@@ -44,7 +44,7 @@ export class StudentsService {
     this.eventEmitter.emit(ENotificationEvent.CREATE, new CreateNotificationDto({
       title: 'New Student Registered',
       type: ENotificationType.STUDENT_CREATED,
-      description: `A new student ${student.firstName} ${student.lastName} has been registered by ${currentUser.firstName} ${currentUser.lastName} of company ${currentUser.organizationName}.`,
+      description: `A new student ${student.firstName} ${student.lastName} has been registered by ${currentUser.firstName} ${currentUser.lastName} of organization ${currentUser.organizationName}.`,
       url: `/students/${student.id}`,
       currentUser
     }));

@@ -13,6 +13,7 @@ import { EApplicationStatus } from 'src/application-system/applications/interfac
 import { ConfigService } from '@nestjs/config';
 import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import { SupportChatMessage } from 'src/support-chat-system/support-chat-messages/entities/support-chat-message.entity';
+import { DashboardQueryDto } from './dashboard-query.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DashboardService extends BaseRepository {
@@ -136,13 +137,14 @@ export class DashboardService extends BaseRepository {
     return ((current - last) / last) * 100;
   };
 
-  async getApplicationPipeline(currentUser: AuthUser) {
+  async getApplicationPipeline(queryDto: DashboardQueryDto, currentUser: AuthUser) {
     const organizationId = currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId;
 
     const tatalActiveApplicationsCount = this.getRepository<Application>(Application).createQueryBuilder('application')
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
+        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
       }))
       .andWhere(
         'application.status NOT IN (:...statuses)',
@@ -162,6 +164,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
+        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Received_Application_At_Abhyam })
       .cache(this.env === 'production')
@@ -171,6 +174,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
+        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Visa_In_Process })
       .cache(this.env === 'production')
@@ -180,6 +184,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
+        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Visa_Received })
       .cache(this.env === 'production')
@@ -189,6 +194,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
+        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Visa_Rejected })
       .cache(this.env === 'production')
@@ -198,6 +204,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
+        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status IN (:...statuses)', { statuses: [EApplicationStatus.Deferral_Initiated, EApplicationStatus.Refund_Request_Initiated, EApplicationStatus.Case_Closed] })
       .cache(this.env === 'production')
@@ -228,16 +235,18 @@ export class DashboardService extends BaseRepository {
       .leftJoin("scm.sender", "sender")
       .leftJoin("sender.organization", "organization")
       .orderBy("scm.createdAt", "DESC")
-      .take(5)
       .where("sender.role != :role", { role: Role.SUPER_ADMIN })
+      .andWhere("scm.seenAt IS NULL") // only unseen messages
       .select([
         'scm.id as "id"',
         'scm.createdAt as "createdAt"',
         'sender.lowerCasedFullName as "sender"',
         'sender.role as "senderRole"',
         'organization.name as "organizationName"',
-        'supportChat.id as "supportChatId"'
+        'supportChat.id as "supportChatId"',
+        'scm.seenAt as "seenAt"'
       ])
+      .limit(5)
       .getRawMany();
   }
 }

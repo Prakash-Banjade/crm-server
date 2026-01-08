@@ -32,9 +32,9 @@ export class SupportChatService {
                     return qb
                         .subQuery()
                         .select("msg.supportChatId", "supportchatid")     // lowercase
-                        .addSelect("msg.content", "latestcontent")        // lowercase
                         .addSelect("msg.createdAt", "latestcreatedat")    // lowercase
                         .addSelect("msg.seenAt", "latestseenat")    // lowercase
+                        .addSelect("msg.senderId", "latestmessagesenderid")    // lowercase
                         .from(SupportChatMessage, "msg")
                         .where(qb2 => {
                             const sub = qb2
@@ -58,9 +58,9 @@ export class SupportChatService {
                 'account.role as "senderRole"',
                 'organization.id as "organizationId"',
                 'organization.name as "organizationName"',
-                'lm.latestcontent as "latestMessageContent"',
                 'lm.latestcreatedat as "latestMessageCreatedAt"',
-                'lm.latestseenat as "latestMessageSeenAt"'
+                'lm.latestseenat as "latestMessageSeenAt"',
+                'lm.latestmessagesenderid as "latestMessageSenderId"',
             ])
             .orderBy("lm.latestcreatedat", "DESC")
 
