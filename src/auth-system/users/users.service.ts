@@ -8,41 +8,43 @@ import { UsersQueryDto } from './dto/user-query.dto';
 import { paginatedRawData } from 'src/utils/paginatedData';
 import { User } from './entities/user.entity';
 import { userSelectCols } from './helpers/user-select-cols';
-import { AuthUser } from 'src/common/types';
+import { AuthUser, Role } from 'src/common/types';
 import { Account } from '../accounts/entities/account.entity';
-import { ImagesService } from 'src/file-management/images/images.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AccountsService } from '../accounts/accounts.service';
+import { OrganizationsService } from '../organizations/organizations.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BaseRepository {
   constructor(
     datasource: DataSource, @Inject(REQUEST) req: FastifyRequest,
-    private readonly imagesService: ImagesService,
     private readonly accountsService: AccountsService,
-    // private readonly organizationesService: OrganizationesService,
+    private readonly organizationsService: OrganizationsService,
   ) { super(datasource, req) }
 
-  // async create(createUserDto: CreateUserDto) {
-  //   const organization = await this.organizationesService.getOrganization(createUserDto.organizationId);
+  async create(createUserDto: CreateUserDto) {
+    const organization = await this.organizationsService.getOrganization(createUserDto.organizationId, { id: true });
 
-  //   const account = await this.accountsService.createAdminAccount(organization, {
-  //     email: createUserDto.email,
-  //     firstName: createUserDto.firstName,
-  //     lastName: createUserDto.lastName
-  //   });
+    const account = await this.accountsService.createAdminAccount(organization, {
+      email: createUserDto.email,
+      firstName: createUserDto.firstName,
+      lastName: createUserDto.lastName
+    });
 
-  //   const user = this.getRepository(User).create({
-  //     account,
-  //   });
+    const user = this.getRepository(User).create({
+      account,
+    });
 
-  //   await this.getRepository(User).save(user);
+    await this.getRepository(User).save(user);
 
-  //   return { message: 'Admin created' }
-  // }
+    return { message: 'Admin created' }
+  }
 
-  async findAll(queryDto: UsersQueryDto) {
+  async findAll(queryDto: UsersQueryDto, currentUser: AuthUser) {
     const queryBuilder = this.getRepository(User).createQueryBuilder('user');
+
+    // when super_admin queries this route, organizationId is provided in query params not in currentUser
+    const organizationId = currentUser.role === Role.SUPER_ADMIN ? queryDto.organizationId : currentUser.organizationId;
 
     queryBuilder
       .orderBy("user.createdAt", queryDto.order)
@@ -50,19 +52,23 @@ export class UsersService extends BaseRepository {
       .limit(queryDto.take)
       .leftJoin("user.account", "account")
       .leftJoin("account.organization", "organization")
-      .leftJoin("account.profileImage", "profileImage")
       .where(new Brackets(qb => {
-        queryDto.q && qb.andWhere("LOWER(CONCAT(account.firstName, ' ', account.lastName)) LIKE :search", { search: `%${queryDto.q?.toLowerCase()?.replaceAll(' ', '%')}%` });
-        queryDto.organizationId && qb.andWhere('organization.id = :organizationId', { organizationId: queryDto.organizationId });
+        queryDto.q && qb.andWhere("account.lowerCasedFullName ILIKE :search", { search: `${queryDto.q}%` });
       }))
-      .select([
-        "user.id as id",
-        "profileImage.url as profileImageUrl",
-        "CONCAT(account.firstName, ' ', account.lastName) as fullName",
-        "account.email as email",
-        "account.role as role",
-        "organization.name as organizationName",
-      ])
+
+    if (organizationId) {
+      queryBuilder.andWhere('organization.id = :organizationId', { organizationId: organizationId });
+    }
+
+    queryBuilder.select([
+      'user.id as "userId"',
+      'account.lowerCasedFullName as "fullName"',
+      'account.profileImage as "profileImage"',
+      'account.email as email',
+      'account.role as role',
+      'user.createdAt as "createdAt"',
+      'account.blacklistedAt as "blacklistedAt"',
+    ])
 
     return paginatedRawData(queryDto, queryBuilder);
   }
@@ -97,7 +103,6 @@ export class UsersService extends BaseRepository {
 
   async myDetails(currentUser: AuthUser) {
     return this.getRepository(Account).createQueryBuilder('account')
-      .leftJoin('account.profileImage', 'profileImage')
       .leftJoin('account.organization', 'organization')
       .where('account.id = :id', { id: currentUser.accountId })
       .select([
@@ -105,8 +110,8 @@ export class UsersService extends BaseRepository {
         'account.email as email',
         'account.firstName as "firstName"',
         'account.lastName as "lastName"',
+        'account.profileImage as "profileImage"',
         'account.role as role',
-        'profileImage.url as "profileImageUrl"',
         'organization.name as "organizationName"',
       ])
       .getRawOne();
@@ -116,20 +121,19 @@ export class UsersService extends BaseRepository {
     const existingUser = await this.getUserByAccountId(currentUser.accountId);
     const existingAccount = await this.getRepository(Account).findOne({
       where: { id: currentUser.accountId },
-      relations: { profileImage: true },
       select: {
         id: true,
         firstName: true,
         lastName: true,
-        profileImage: { id: true },
+        profileImage: true,
         verifiedAt: true
       }
     });
     if (!existingAccount) throw new InternalServerErrorException('Unable to update the associated profile. Please contact support.');
 
-    const profileImage = (updateUserDto.profileImageId && (existingAccount.profileImage?.id !== updateUserDto.profileImageId || !existingAccount.profileImage))
-      ? await this.imagesService.findOne(updateUserDto.profileImageId)
-      : existingAccount.profileImage;
+    // const profileImage = (updateUserDto.profileImageId && (existingAccount.profileImage?.id !== updateUserDto.profileImageId || !existingAccount.profileImage))
+    //   ? await this.imagesService.findOne(updateUserDto.profileImageId)
+    //   : existingAccount.profileImage;
 
     // update user
     Object.assign(existingUser, {
@@ -141,7 +145,7 @@ export class UsersService extends BaseRepository {
     Object.assign(existingAccount, {
       firstName: updateUserDto.firstName || existingAccount.firstName,
       lastName: updateUserDto.lastName || existingAccount.lastName,
-      profileImage
+      // profileImage
     })
 
     await this.getRepository(Account).save(existingAccount);
@@ -160,5 +164,22 @@ export class UsersService extends BaseRepository {
     await this.getRepository(Account).remove(account);
 
     return { message: 'Admin removed' }
+  }
+
+  async toggleBlacklist(id: string, currentUser: AuthUser) {
+    const account = await this.getRepository(Account).findOne({
+      where: {
+        user: { id },
+        organization: { id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId }
+      },
+      select: { id: true, blacklistedAt: true }
+    });
+
+    if (!account) throw new NotFoundException('User not found');
+
+    const toggledBlacklistedAt = account.blacklistedAt ? null : new Date();
+    // blacklist the account
+    await this.getRepository(Account).update(account.id, { blacklistedAt: toggledBlacklistedAt });
+    return { message: toggledBlacklistedAt ? 'User blacklisted' : 'User removed from blacklist' }
   }
 }

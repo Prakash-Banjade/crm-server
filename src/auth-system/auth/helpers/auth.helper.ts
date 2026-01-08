@@ -168,8 +168,19 @@ export class AuthHelper extends BaseRepository {
     async validateAccount(email: string, password: string): Promise<Account | { message: string }> {
         const foundAccount = await this.datasource.getRepository(Account).findOne({
             where: { email },
-            relations: { organization: true, profileImage: true },
-            select: { organization: { id: true, name: true }, profileImage: { url: true } },
+            relations: { organization: true },
+            select: {
+                id: true,
+                email: true,
+                password: true,
+                verifiedAt: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                organization: { id: true, name: true },
+                profileImage: true,
+                blacklistedAt: true
+            },
         });
 
         if (!foundAccount) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS);
@@ -177,14 +188,17 @@ export class AuthHelper extends BaseRepository {
         // if account is not verified, send confirmation email
         if (!foundAccount.verifiedAt) return await this.sendEmailConfirmation(foundAccount);
 
-        if (!foundAccount.password) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS)
+        // if account is blacklisted, throw error
+        if (foundAccount.blacklistedAt) throw new UnauthorizedException(AuthMessage.ACCOUNT_BLACKLISTED);
+
+        if (!foundAccount.password) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS);
 
         const isPasswordValid = await bcrypt.compare(
             password,
             foundAccount.password,
         );
 
-        if (!isPasswordValid) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS)
+        if (!isPasswordValid) throw new UnauthorizedException(AuthMessage.INVALID_AUTH_CREDENTIALS);
 
         return foundAccount;
     }

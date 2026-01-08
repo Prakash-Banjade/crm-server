@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, Index, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { Account } from "src/auth-system/accounts/entities/account.entity";
 import { type OrganizationBankingDetail } from "../interface";
 import { BaseEntity } from "src/common/entities/base.entity";
@@ -28,20 +28,17 @@ export class Organization extends BaseEntity {
     @Column('text', { default: "" })
     panNumber: string;
 
-    // @OneToOne(() => File, { onDelete: 'CASCADE' })
-    // @JoinColumn({ name: 'panCertificate' })
-    // panCertificate: File;
+    @Column('text', { nullable: true })
+    panCertificate: string | null; // file
 
-    // @OneToOne(() => File, { onDelete: 'CASCADE' })
-    // @JoinColumn({ name: 'registrationDocumentId' })
-    // registrationDocument: File;
+    @Column('text', { nullable: true })
+    registrationDocument: string | null; // file
 
     @Column('jsonb', { nullable: false })
     bankingDetails: OrganizationBankingDetail;
 
-    // @OneToOne(() => File, { nullable: true, onDelete: 'CASCADE' })
-    // @JoinColumn({ name: 'logo-id' })
-    // logo: File;
+    @Column('text', { nullable: true })
+    logo: string | null; // file
 
     @Column('text', { default: "" })
     brandColorPrimary: string;
@@ -59,5 +56,5 @@ export class Organization extends BaseEntity {
     createdBy: Account | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    blackListedAt: Date | null;
+    blacklistedAt: Date | null;
 }

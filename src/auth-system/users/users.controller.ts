@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param, Delete, Query, UseInterceptors, Post } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, Query, UseInterceptors, Post, ParseUUIDPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersQueryDto } from './dto/user-query.dto';
@@ -15,18 +15,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
-  // @Post()
-  // @ApiOperation({ summary: 'Create a new user, particularly ADMIN' })
-  // @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.CREATE })
-  // @UseInterceptors(TransactionInterceptor)
-  // create(@Body() createUserDto: CreateUserDto) {
-  //   return this.usersService.create(createUserDto);
-  // }
+  @Post()
+  @ApiOperation({ summary: 'Create a new user, particularly ADMIN' })
+  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.CREATE })
+  @UseInterceptors(TransactionInterceptor)
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
 
   @Get()
-  @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.READ })
-  findAll(@Query() queryDto: UsersQueryDto) {
-    return this.usersService.findAll(queryDto);
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.READ })
+  findAll(@Query() queryDto: UsersQueryDto, @CurrentUser() currentUser: AuthUser) {
+    return this.usersService.findAll(queryDto, currentUser);
   }
 
   @Get('me')
@@ -35,7 +35,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
@@ -45,10 +45,18 @@ export class UsersController {
     return this.usersService.update(updateUserDto, currentUser);
   }
 
+  @Patch('/blacklist/:id')
+  @ApiOperation({ summary: 'Blacklist a user' })
+  @CheckAbilities({ subject: Role.ADMIN, action: Action.UPDATE })
+  @UseInterceptors(TransactionInterceptor)
+  toggleBlacklist(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() currentUser: AuthUser) {
+    return this.usersService.toggleBlacklist(id, currentUser);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a user, particularly ADMIN' })
   @CheckAbilities({ subject: Role.SUPER_ADMIN, action: Action.DELETE })
-  delete(@Param('id') id: string) {
+  delete(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.delete(id);
   }
 

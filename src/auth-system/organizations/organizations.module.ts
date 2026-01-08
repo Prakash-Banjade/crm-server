@@ -14,5 +14,6 @@ import { AccountsModule } from '../accounts/accounts.module';
   ],
   controllers: [OrganizationsController],
   providers: [OrganizationsService],
+  exports: [OrganizationsService],
 })
 export class OrganizationsModule { }

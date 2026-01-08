@@ -1,22 +1,22 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { DataSource, FindOptionsSelect } from 'typeorm';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import { DataSource, FindOptionsSelect, Not } from 'typeorm';
 import { Account } from './entities/account.entity';
 import { REQUEST } from '@nestjs/core';
 import { BaseRepository } from 'src/common/repository/base-repository';
 import { Role } from 'src/common/types';
 import { generateRandomPassword } from 'src/utils/generatePassword';
 import bcrypt from "bcryptjs";
-import { PASSWORD_SALT_COUNT } from 'src/common/CONSTANTS';
+import { DEFAULT_ORGANIZATION_NAME, PASSWORD_SALT_COUNT } from 'src/common/CONSTANTS';
 import { AuthHelper } from '../auth/helpers/auth.helper';
 import { RefreshTokenService } from '../auth/helpers/refresh-tokens.service';
 import { LoginDevice } from './entities/login-devices.entity';
-import { Image } from 'src/file-management/images/entities/image.entity';
-import { ImagesService } from 'src/file-management/images/images.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { WebAuthnCredential } from '../webAuthn/entities/webAuthnCredential.entity';
 import { type FastifyRequest } from 'fastify';
 import { UtilitiesService } from 'src/utilities/utilities.service';
 import { Organization } from '../organizations/entities/organization.entity';
+import { Counselor } from 'src/counselors/entities/counselor.entity';
+import { Bde } from 'src/bde/entities/bde.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class AccountsService extends BaseRepository {
@@ -24,54 +24,63 @@ export class AccountsService extends BaseRepository {
     dataSource: DataSource, @Inject(REQUEST) req: FastifyRequest,
     private readonly authHelper: AuthHelper,
     private readonly refreshTokenService: RefreshTokenService,
-    private readonly imagesService: ImagesService,
-    private readonly utilitiesService: UtilitiesService
+    private readonly utilitiesService: UtilitiesService,
   ) { super(dataSource, req) }
 
-  // // TODO: Actually the best approach would be to not create account directly, instead create EmailVerificationPending record, once verified then create account
-  // // But in this app, if account is not created at first, then we student, teacher can't be created
-  // async createAccount(entity: Teacher | Student | Staff, profileImage?: Image) {
-  //   const organizationId = this.utilitiesService.getOrganizationId();
+  async createAccount({
+    entity,
+    firstName,
+    lastName,
+    email,
+    organizationId
+  }: {
+    entity: Counselor | Bde,
+    firstName: string,
+    lastName: string,
+    email: string,
+    organizationId: string
+  }) {
+    // check for existing
+    const existingAccount = await this.getRepository(Account).findOne({ where: { email }, select: { id: true } });
+    if (existingAccount) throw new ConflictException({
+      message: 'Duplicate email. Please use different email.',
+      field: 'email',
+    });
 
-  //   // check for existing
-  //   const existingAccount = await this.getRepository(Account).findOne({ where: { email: entity.email }, select: { id: true } });
-  //   if (existingAccount) throw new BadRequestException({
-  //     message: 'Duplicate email. Please use different email.',
-  //     field: 'email',
-  //   });
+    const key = entity instanceof Counselor ? Role.COUNSELOR : Role.BDE;
 
-  //   // create account by generating random password
-  //   const password = generateRandomPassword();
-  //   const key = entity instanceof Teacher
-  //     ? Role.TEACHER
-  //     : entity instanceof Student
-  //       ? Role.STUDENT
-  //       : Role.STAFF
+    const organization = await this.getRepository(Organization).findOne({ where: { id: organizationId }, select: { id: true, name: true } })
+    if (!organization) throw new NotFoundException('Organization not found')
+
+    // only bde user can be added to default organization
+    if (key !== Role.BDE && organization.name === DEFAULT_ORGANIZATION_NAME) throw new BadRequestException("Cannot add user to default organization. Please choose another organization.")
+
+    // create account by generating random password
+    const password = generateRandomPassword();
 
 
-  //   const account = this.getRepository<Account>(Account).create({
-  //     email: entity.email,
-  //     firstName: entity.firstName,
-  //     lastName: entity.lastName,
-  //     role: key,
-  //     [key]: entity,
-  //     profileImage: profileImage ?? null,
-  //     password,
-  //     prevPasswords: [bcrypt.hashSync(password, PASSWORD_SALT_COUNT)],
-  //     organization: await this.organizationesService.getOrganization(organizationId),
-  //   });
+    const account = this.getRepository<Account>(Account).create({
+      email,
+      firstName,
+      lastName,
+      role: key,
+      [key]: entity,
+      password,
+      prevPasswords: [bcrypt.hashSync(password, PASSWORD_SALT_COUNT)],
+      organization,
+    });
 
-  //   account.setLowerCasedFullName();
+    account.setLowerCasedFullName();
 
-  //   const savedAccount = await this.getRepository(Account).save(account);
+    const savedAccount = await this.getRepository(Account).save(account);
 
-  //   // send account confirmation mail to the user, mail won't be sent if the account is staff
-  //   return this.authHelper.sendEmailConfirmation(savedAccount);
-  // }
+    // send account confirmation mail to the user
+    return this.authHelper.sendEmailConfirmation(savedAccount);
+  }
 
   async createAdminAccount(organization: Organization, dto: { firstName: string, lastName: string, email: string }) {
     const existingAccount = await this.getRepository(Account).findOne({ where: { email: dto.email }, select: { id: true } });
-    if (existingAccount) throw new BadRequestException({
+    if (existingAccount) throw new ConflictException({
       message: 'Duplicate email. Please use different email.',
       field: 'email',
     });
@@ -97,17 +106,12 @@ export class AccountsService extends BaseRepository {
     return createdAccount
   }
 
-  async update(id: string, dto: UpdateAccountDto) {
-    const account = await this.getRepository(Account).findOne({
-      where: { id },
-      relations: { profileImage: true },
-      select: { id: true, firstName: true, lastName: true, verifiedAt: true, profileImage: { id: true } }
-    });
-
-    if (!account) throw new NotFoundException('No associated account found');
-
-    const image = await this.imagesService.update(account.profileImage?.id, dto.profileImageId);
-    if (image !== undefined) account.profileImage = image;
+  async update(account: Account, dto: UpdateAccountDto) {
+    const withDuplicateEmail = await this.getRepository(Account).findOne({ where: { id: Not(account.id), email: dto.email }, select: { id: true } })
+    if (withDuplicateEmail) throw new ConflictException({
+      message: 'Duplicate email. Please use different email.',
+      field: 'email',
+    })
 
     Object.assign(account, dto)
 

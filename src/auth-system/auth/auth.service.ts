@@ -208,14 +208,14 @@ export class AuthService extends BaseRepository {
 
     const account = await this.getRepository(Account).findOne({
       where: { id: req.accountId },
-      relations: { organization: true, profileImage: true },
+      relations: { organization: true },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
         role: true,
-        profileImage: { url: true },
+        profileImage: true,
         organization: { id: true, name: true } // necessary for jwt access token
       },
     }); // accountId is validated in the refresh token guard
@@ -243,16 +243,9 @@ export class AuthService extends BaseRepository {
 
     return reply
       .setCookie(Tokens.REFRESH_TOKEN_COOKIE_NAME, refresh_token, this.getRefreshCookieOptions())
+      .setCookie(Tokens.ACCESS_TOKEN_COOKIE_NAME, access_token, this.getAccessCookieOptions())
       .header('Content-Type', 'application/json')
-      .send({
-        access_token,
-        user: {
-          firstName: account.firstName,
-          lastName: account.lastName,
-          profileImageUrl: account.profileImage?.url,
-          organizationName: account.organization?.name
-        }
-      })
+      .send({ access_token })
   }
 
   async logout(reply: FastifyReply) {

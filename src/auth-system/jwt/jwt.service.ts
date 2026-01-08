@@ -58,7 +58,7 @@ export class JwtService {
             organizationName: account.organization?.name ?? null,
             firstName: account.firstName,
             lastName: account.lastName,
-            profileImage: account.profileImage?.url ?? null,
+            profileImage: account.profileImage ?? null,
             deviceId,
         };
 

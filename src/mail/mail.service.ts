@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { emailConfig, ITemplates } from './mail-service.config';
+import { ITemplates } from './mail-service.config';
 import { readFileSync } from 'fs';
 import * as nodemailer from 'nodemailer';
 import Handlebars from 'handlebars';
 import { join } from 'path';
 import { OnEvent } from '@nestjs/event-emitter';
-import { ConfirmationMailEventDto, ResetPasswordMailEventDto, TwoFAMailEventDto, UserCredentialsEventDto } from './dto/events.dto';
+import { ConfirmationMailEventDto, NotificationMailEvent, ResetPasswordMailEventDto, TwoFAMailEventDto, UserCredentialsEventDto } from './dto/events.dto';
 import Mail from 'nodemailer/lib/mailer';
-import { thisSchool } from 'src/common/CONSTANTS';
+import { thisCRM } from 'src/common/CONSTANTS';
 import { ConfigService } from '@nestjs/config';
 
 export enum MailEvents {
@@ -17,6 +17,7 @@ export enum MailEvents {
     USER_CREDENTIALS = 'mail.user-credentials',
     RESET_PASSWORD = 'mail.reset-password',
     TWOFA_OTP = 'twofa.otp',
+    SEND_NOTIFICATION = 'mail:send-notification',
 }
 
 @Injectable()
@@ -27,8 +28,21 @@ export class MailService {
     private readonly templates: ITemplates;
 
     constructor(private readonly configService: ConfigService) {
-        this.transport = createTransport(emailConfig);
-        this.email = `"SMS Backend" <${emailConfig.auth.user}>`;
+        const mailHost = this.configService.get<string>('MAIL_OUTGOING_SERVER');
+        const mailPort = this.configService.get<number>('MAIL_SMTP_PORT');
+        const mailUser = this.configService.get<string>('MAIL_USERNAME');
+        const mailPass = this.configService.get<string>('MAIL_PASSWORD');
+
+        this.transport = createTransport({
+            host: mailHost,
+            port: mailPort,
+            secure: mailPort === 465,
+            auth: {
+                user: mailUser,
+                pass: mailPass,
+            },
+        });
+        this.email = `"Abhyam CRM" <${mailUser}>`;
         this.domain = this.configService.get('CLIENT_URL')!;
 
         this.templates = {
@@ -36,6 +50,7 @@ export class MailService {
             resetPassword: MailService.parseTemplate('reset-password.hbs'),
             userCredentials: MailService.parseTemplate('sendUserCredentials.hbs'),
             twoFaOtp: MailService.parseTemplate('two-fa-otp.hbs'),
+            notification: MailService.parseTemplate('notification.hbs'),
         };
     }
 
@@ -50,7 +65,7 @@ export class MailService {
     }
 
     public async sendEmail(
-        to: string,
+        to: string | string[],
         subject: string,
         html: string,
         attachments?: Mail.Attachment[]
@@ -74,9 +89,9 @@ export class MailService {
             ...dto,
             link: `${this.domain}/auth/confirm-email/${dto.token}`,
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(dto.receiverEmail, subject, html);
     }
@@ -87,9 +102,9 @@ export class MailService {
         const html = this.templates.userCredentials({
             ...dto,
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(dto.email, subject, html);
     }
@@ -102,9 +117,9 @@ export class MailService {
             name: receiverName,
             resetLink: `${this.domain}/auth/reset-password/${dto.token}`,
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(
             receiverEmail,
@@ -120,10 +135,22 @@ export class MailService {
             ...dto,
             otp: dto.otp.toString(),
             clientUrl: this.domain,
-            schoolName: thisSchool.name,
-            schoolAddress: thisSchool.address,
-            schoolLogo: thisSchool.logo,
+            schoolName: thisCRM.name,
+            schoolAddress: thisCRM.address,
+            schoolLogo: thisCRM.logo,
         });
         this.sendEmail(dto.receiverEmail, subject, html);
+    }
+
+    @OnEvent(MailEvents.SEND_NOTIFICATION)
+    async sendNotification({ emails, title, description, url }: NotificationMailEvent) {
+        const html = this.templates.notification({
+            title,
+            description,
+            url,
+            logoUrl: thisCRM.logo,
+        });
+
+        this.sendEmail(emails, title, html);
     }
 }

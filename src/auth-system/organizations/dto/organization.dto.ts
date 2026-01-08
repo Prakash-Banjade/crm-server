@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { IsDefined, IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl, ValidateNested } from "class-validator";
 import { type OrganizationBankingDetail } from "../interface";
 import { Type } from "class-transformer";
+import { IsMinioUrl } from "src/common/decorators/validators/isMinioUrl";
 
 class BankingDetails implements OrganizationBankingDetail {
     @ApiProperty()
@@ -95,6 +96,21 @@ export class CreateOrganizationDto {
     @IsOptional()
     @IsString()
     brandColorSecondary?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    logo?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    panCertificate?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    registrationDocument?: string;
 }
 
 export class UpdateOrganizationDto extends PartialType(CreateOrganizationDto) { }

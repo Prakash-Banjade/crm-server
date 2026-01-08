@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import { User } from './auth-system/users/entities/user.entity';
 import { Account } from './auth-system/accounts/entities/account.entity';
 import { Organization } from './auth-system/organizations/entities/organization.entity';
-import { PASSWORD_SALT_COUNT } from './common/CONSTANTS';
+import { DEFAULT_ORGANIZATION_NAME, PASSWORD_SALT_COUNT } from './common/CONSTANTS';
 import { Role } from './common/types';
 import bcrypt from 'bcryptjs';
 import { defaultBankingDetails } from './auth-system/organizations/interface';
@@ -29,7 +29,7 @@ export class AppService {
 
     // Create default organization
     const organization = organizationRepo.create({
-      name: "Default",
+      name: DEFAULT_ORGANIZATION_NAME,
       email: "default@gmail.com",
       bankingDetails: defaultBankingDetails,
     });

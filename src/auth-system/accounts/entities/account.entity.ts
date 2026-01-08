@@ -8,8 +8,16 @@ import { BCRYPT_HASH, EMAIL_REGEX, PASSWORD_SALT_COUNT } from "src/common/CONSTA
 import { WebAuthnCredential } from "src/auth-system/webAuthn/entities/webAuthnCredential.entity";
 import { LoginDevice } from "./login-devices.entity";
 import { getLowerCasedFullName } from "src/utils/utils";
-import { Image } from "src/file-management/images/entities/image.entity";
 import { Organization } from "src/auth-system/organizations/entities/organization.entity";
+import { Counselor } from "src/counselors/entities/counselor.entity";
+import { Bde } from "src/bde/entities/bde.entity";
+import { Student } from "src/students/entities/student.entity";
+import { Application } from "src/application-system/applications/entities/application.entity";
+import { Message } from "src/application-system/messages/entities/message.entity";
+import { Booking } from "src/bookings/entities/booking.entity";
+import { NotificationRecipient } from "src/notification-system/notification-recipients/entities/notification-recipient.entity";
+import { SupportChat } from "src/support-chat-system/support-chat/entities/support-chat.entity";
+import { SupportChatMessage } from "src/support-chat-system/support-chat-messages/entities/support-chat-message.entity";
 
 @Entity()
 export class Account extends BaseEntity {
@@ -40,6 +48,9 @@ export class Account extends BaseEntity {
     @Column({ type: 'timestamp', nullable: true })
     verifiedAt: Date | null = null;
 
+    @Column({ type: 'timestamp', nullable: true })
+    blacklistedAt: Date | null;
+
     @Column({ type: 'text', array: true })
     prevPasswords: string[];
 
@@ -56,7 +67,7 @@ export class Account extends BaseEntity {
     twoFaEnabledAt: Date | null;
 
     @OneToOne(() => User, user => user.account, { nullable: true, cascade: true })
-    user: User;
+    user: User | null;
 
     @BeforeInsert()
     hashPassword() {
@@ -69,18 +80,49 @@ export class Account extends BaseEntity {
         if (this.email && !EMAIL_REGEX.test(this.email)) throw new BadRequestException('Invalid email');
     }
 
-    @OneToOne(() => Image, image => image.account_profileImage, { nullable: true })
-    profileImage: Image | null;
-
-    @OneToMany(() => Image, image => image.uploadedBy)
-    images: Image[];
+    @Column({ type: 'text', nullable: true })
+    profileImage: string | null;
 
     /**
      * Organization to which the account belongs
      */
+    @Index()
     @ManyToOne(() => Organization, organization => organization.accounts, { onDelete: 'CASCADE' })
     organization: Organization;
 
     @OneToMany(() => Organization, organization => organization.createdBy)
     createdOrganizations: Organization[];
+
+    @OneToOne(() => Counselor, counselor => counselor.account, { nullable: true, cascade: true })
+    counselor: Counselor | null;
+
+    @OneToMany(() => Counselor, counselor => counselor.createdBy)
+    createdCounselors: Counselor[];
+
+    @OneToOne(() => Bde, bde => bde.account, { nullable: true, cascade: true })
+    bde: Bde | null;
+
+    @OneToMany(() => Student, student => student.assignedTo)
+    assignedStudents: Student[];
+
+    @OneToMany(() => Student, student => student.createdBy)
+    createdStudents: Student[];
+
+    @OneToMany(() => Application, application => application.createdBy)
+    createdApplications: Application[]
+
+    @OneToMany(() => Message, message => message.sender)
+    sentApplicationMessages: Message[]
+
+    @OneToMany(() => Booking, booking => booking.createdBy)
+    createdBookings: Booking[]
+
+    @OneToMany(() => NotificationRecipient, notification => notification.recipient)
+    receivedNotifications: NotificationRecipient[]
+
+    @OneToOne(() => SupportChat, supportChat => supportChat.account, { nullable: true })
+    supportChat: SupportChat | null;
+
+    @OneToMany(() => SupportChatMessage, message => message.sender)
+    supportChatMessages: SupportChatMessage[];
 }

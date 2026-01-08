@@ -6,7 +6,6 @@ import { AuthModule } from '../auth/auth.module';
 import { AccountsController } from './accounts.controller';
 import { AccountsCronJob } from './accounts.cron';
 import { LoginDevice } from './entities/login-devices.entity';
-import { ImagesModule } from 'src/file-management/images/images.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { ImagesModule } from 'src/file-management/images/images.module';
       LoginDevice,
     ]),
     AuthModule,
-    ImagesModule,
   ],
   controllers: [AccountsController],
   providers: [AccountsService, AccountsCronJob],

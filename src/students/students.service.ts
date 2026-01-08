@@ -1,0 +1,192 @@
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Student } from './entities/student.entity';
+import { FindOptionsSelect, Repository } from 'typeorm';
+import { AuthUser, Role } from 'src/common/types';
+import { AccountsService } from 'src/auth-system/accounts/accounts.service';
+import { StudentQueryDto } from './dto/students-query.dto';
+import paginatedData from 'src/utils/paginatedData';
+import { Account } from 'src/auth-system/accounts/entities/account.entity';
+import { StudentsHelperService } from './students-helper.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ENotificationEvent } from 'src/notification-system/notifications/notifications.service';
+import { CreateNotificationDto } from 'src/notification-system/notifications/dto/create-notification.dto';
+import { ENotificationType } from 'src/notification-system/notifications/entities/notification.entity';
+
+@Injectable()
+export class StudentsService {
+  constructor(
+    @InjectRepository(Student) private readonly studentsRepo: Repository<Student>,
+    private readonly studentsHelperService: StudentsHelperService,
+    private readonly accountsService: AccountsService,
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
+
+  async create(dto: CreateStudentDto, currentUser: AuthUser) {
+    const withDuplicateEmail = await this.studentsRepo.findOne({ where: { email: dto.email }, select: { id: true } });
+    if (withDuplicateEmail) throw new ConflictException('Email already exists');
+
+    const createdBy = await this.accountsService.getOrThrow(currentUser.accountId);
+
+    if (dto.asLead) return this.createAsLead(dto, createdBy);
+
+    const student = this.studentsRepo.create({
+      ...dto,
+      refNo: await this.studentsHelperService.generateStudentId(),
+      createdBy,
+    });
+
+    await this.studentsRepo.save(student);
+
+    // create notifications
+    this.eventEmitter.emit(ENotificationEvent.CREATE, new CreateNotificationDto({
+      title: 'New Student Registered',
+      type: ENotificationType.STUDENT_CREATED,
+      description: `A new student ${student.firstName} ${student.lastName} has been registered by ${currentUser.firstName} ${currentUser.lastName} of organization ${currentUser.organizationName}.`,
+      url: `/students/${student.id}`,
+      currentUser
+    }));
+
+    return { message: 'Student created successfully' }
+  }
+
+  async createAsLead(dto: CreateStudentDto, createdBy: Account) {
+    const refNo = await this.studentsHelperService.generateStudentId()
+
+    const student = this.studentsRepo.create({
+      ...dto,
+      refNo,
+      createdBy,
+    });
+
+    await this.studentsRepo.save(student);
+
+    // Todo: send in-app notification
+
+    return { message: 'Lead created successfully' }
+  }
+
+  findAll(queryDto: StudentQueryDto, currentUser: AuthUser) {
+    const queryBuilder = this.studentsRepo.createQueryBuilder('student')
+      .orderBy(queryDto.sortBy, queryDto.order)
+      .skip(queryDto.skip)
+      .take(queryDto.take)
+      .leftJoin('student.createdBy', 'createdBy')
+      .loadRelationCountAndMap('student.applicationsCount', 'student.applications')
+
+    queryBuilder.andWhere(queryDto.onlyLeads ? 'student.asLead IS NOT NULL' : 'student.asLead IS NULL');
+
+    if (queryDto.q) queryBuilder.andWhere('student.fullName ILIKE :search', { search: `${queryDto.q}%` });
+    if (currentUser.organizationId) queryBuilder.andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId });
+    if (queryDto.refNo) queryBuilder.andWhere('student.refNo = :refNo', { refNo: queryDto.refNo });
+    if (queryDto.dateFrom) queryBuilder.andWhere('student.createdAt >= :dateFrom', { dateFrom: queryDto.dateFrom });
+    if (queryDto.dateTo) queryBuilder.andWhere('student.createdAt <= :dateTo', { dateTo: queryDto.dateTo });
+
+    queryBuilder.select([
+      'student.id',
+      'student.refNo',
+      'student.fullName',
+      'student.email',
+      'student.createdAt',
+      'student.phoneNumber',
+      'student.statusMessage',
+      'createdBy.id',
+      'createdBy.lowerCasedFullName',
+      'student.asLead',
+    ])
+
+    if (queryDto.onlyLeads) {
+      queryBuilder.addSelect([
+        'student.firstName',
+        'student.lastName'
+      ])
+    }
+
+    return paginatedData(queryDto, queryBuilder);
+  }
+
+  async findOne(id: string, currentUser: AuthUser, select?: FindOptionsSelect<Student>) {
+    const queryBuilder = this.studentsRepo.createQueryBuilder('student')
+      .where('student.id = :id', { id })
+      .loadRelationCountAndMap('student.applicationsCount', 'student.applications')
+
+    if (currentUser.role !== Role.SUPER_ADMIN) {
+      queryBuilder
+        .leftJoin('student.createdBy', 'createdBy')
+        .andWhere('createdBy.organizationId = :organizationId', { organizationId: currentUser.organizationId })
+    }
+
+    queryBuilder.select([
+      'student.id',
+      'student.refNo',
+      'student.fullName',
+      'student.firstName',
+      'student.lastName',
+      'student.email',
+      'student.createdAt',
+      'student.phoneNumber',
+      'student.statusMessage',
+      'student.personalInfo',
+      'student.academicQualification',
+      'student.documents',
+      'student.workExperiences',
+    ])
+
+    const existing = await queryBuilder.getOne();
+
+    if (!existing) throw new NotFoundException('Student not found');
+
+    return existing;
+  }
+
+  async update(id: string, dto: UpdateStudentDto, currentUser: AuthUser) {
+    const existing = await this.studentsRepo.findOne({
+      where: {
+        id,
+        createdBy: {
+          organization: {
+            id: currentUser.organizationId
+          }
+        }
+      },
+      select: { id: true, email: true }
+    });
+
+    if (!existing) throw new NotFoundException('Student not found');
+
+    if (dto.email && dto.email !== existing.email) {
+      const withDuplicateEmail = await this.studentsRepo.findOne({ where: { email: dto.email }, select: { id: true } });
+      if (withDuplicateEmail) throw new ConflictException('Email already exists');
+    }
+
+    Object.assign(existing, dto);
+
+    const statusMessage = await this.studentsHelperService.getStatusMessage(existing);
+
+    await this.studentsRepo.save({ ...existing, statusMessage });
+
+    return { message: 'Information updated' }
+  }
+
+  async remove(id: string, currentUser: AuthUser) {
+    const existing = await this.studentsRepo.findOne({
+      where: {
+        id,
+        createdBy: {
+          organization: {
+            id: currentUser.organizationId
+          }
+        }
+      },
+      select: { id: true }
+    });
+
+    if (!existing) throw new NotFoundException('Student not found');
+
+    await this.studentsRepo.remove(existing);
+
+    return { message: 'Student deleted successfully' }
+  }
+}

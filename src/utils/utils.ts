@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { AuthUser, Role } from "src/common/types";
-import { createHash } from 'crypto';
+import { createHash, randomInt } from 'crypto';
 
 export const ISO_TIME = 'T00:00:00Z' as const;
 
