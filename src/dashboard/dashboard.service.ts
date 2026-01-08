@@ -144,7 +144,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
-        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
+        if (queryDto.year) qb.andWhere('application.year = :year', { year: queryDto.year });
       }))
       .andWhere(
         'application.status NOT IN (:...statuses)',
@@ -164,7 +164,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
-        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
+        if (queryDto.year) qb.andWhere('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Received_Application_At_Abhyam })
       .cache(this.env === 'production')
@@ -174,7 +174,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
-        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
+        if (queryDto.year) qb.andWhere('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Visa_In_Process })
       .cache(this.env === 'production')
@@ -184,7 +184,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
-        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
+        if (queryDto.year) qb.andWhere('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Visa_Received })
       .cache(this.env === 'production')
@@ -194,7 +194,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
-        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
+        if (queryDto.year) qb.andWhere('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status = :status', { status: EApplicationStatus.Visa_Rejected })
       .cache(this.env === 'production')
@@ -204,7 +204,7 @@ export class DashboardService extends BaseRepository {
       .leftJoin("application.createdBy", "createdBy")
       .where(new Brackets(qb => {
         if (organizationId) qb.where('createdBy.organizationId = :organizationId', { organizationId });
-        if (queryDto.year) qb.where('application.year = :year', { year: queryDto.year });
+        if (queryDto.year) qb.andWhere('application.year = :year', { year: queryDto.year });
       }))
       .andWhere('application.status IN (:...statuses)', { statuses: [EApplicationStatus.Deferral_Initiated, EApplicationStatus.Refund_Request_Initiated, EApplicationStatus.Case_Closed] })
       .cache(this.env === 'production')

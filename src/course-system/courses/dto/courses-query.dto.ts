@@ -18,128 +18,89 @@ export class CourseQueryDto extends QueryDto {
     @ApiPropertyOptional()
     @IsString({ each: true })
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
+    @Transform(({ value }) => value?.split(',') || [])
     intakes?: string[];
 
     @ApiPropertyOptional()
     @IsString({ each: true })
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
+    @Transform(({ value }) => value?.split(',') || [])
+    requirements?: string[];
+
+    @ApiPropertyOptional()
+    @IsString({ each: true })
+    @IsOptional()
+    @Transform(({ value }) => value?.split(',') || [])
     programLevels?: string[];
 
     @ApiPropertyOptional()
     @IsString({ each: true })
     @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
-    categoryNames?: string[];
-
-    @ApiPropertyOptional()
-    @IsString({ each: true })
-    @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
-    countryNames?: string[];
-
-    @ApiPropertyOptional()
-    @IsString({ each: true })
-    @IsOptional()
-    @Transform(({ value }) => value.split(','))
+    @Transform(({ value }) => value?.split(',') || [])
     universityIds?: string[];
 
     @ApiPropertyOptional()
-    @IsString({ each: true })
+    @IsString()
+    @IsOptional()
+    min_duration: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    max_duration: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    min_fee: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    max_fee: string;
+
+
+    @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => {
-        if (value) return value.split('|'); // split by | because, universities name can have comma(,) which break downs the university name and no data is returned
-        return []
+        try {
+            const val = JSON.parse(decodeURIComponent(value || "[]"))
+            return val.map((item: { value: string }) => item.value).filter(Boolean)
+        } catch (e) {
+            return []
+        }
     })
-    universityNames?: string[];
+    university: string[];
 
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => {
-        const num = +value;
-        if (isNaN(num)) return undefined;
-        return num;
+        try {
+            const val = JSON.parse(decodeURIComponent(value || "[]"))
+            return val.map((item: { value: string }) => item.value).filter(Boolean)
+        } catch (e) {
+            return []
+        }
     })
-    courseDurationFrom?: number | undefined;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @Transform(({ value }) => {
-        const num = +value;
-        if (isNaN(num)) return undefined;
-        return num;
-    })
-    courseDurationTo?: number | undefined;
-
-    @ApiPropertyOptional()
-    @IsString({ each: true })
-    @IsOptional()
-    @Transform(({ value }) => {
-        if (value) return value.split(',');
-        return []
-    })
-    requirements?: string[];
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    ieltsOverall: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    ieltsMinScore: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    pteOverall: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    minWorkExperience: string;
+    country: string[];
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    feeFrom: string;
+    grade12: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    feeTo: string;
+    ug: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    currency: string;
+    ielts: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    grade12_percentage: string;
-
-    @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
-    ug_percentage: string;
-
-    @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
-    highestLevelOfEducation: string;
+    pte: string;
 }

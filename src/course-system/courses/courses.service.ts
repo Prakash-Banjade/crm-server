@@ -43,44 +43,32 @@ export class CoursesService {
       .leftJoinAndSelect('course.category', 'category')
       .where(new Brackets(qb => {
         if (queryDto.q) {
-          qb.andWhere('course.name ILIKE :search)', { search: `%${queryDto.q}%` })
+          qb.andWhere('course.name ILIKE :search', { search: `${queryDto.q}%` })
+            .orWhere('university.name ILIKE :search', { search: `${queryDto.q}%` })
+            .orWhere('category.name ILIKE :search', { search: `${queryDto.q}%` })
         }
       }))
       .andWhere(new Brackets(qb => {
-        queryDto.categoryNames?.length && qb.andWhere('category.name IN (:...categoryNames)', { categoryNames: queryDto.categoryNames })
-        queryDto.countryNames?.length && qb.andWhere('country.name IN (:...countryNames)', { countryNames: queryDto.countryNames })
         queryDto.programLevels?.length && qb.andWhere('course.programLevel IN (:...programLevels)', { programLevels: queryDto.programLevels })
         queryDto.universityIds?.length && qb.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.universityIds })
-        queryDto.courseDurationFrom && qb.andWhere('course.duration >= :courseDurationFrom', { courseDurationFrom: queryDto.courseDurationFrom })
-        queryDto.courseDurationTo && qb.andWhere('course.duration <= :courseDurationTo', { courseDurationTo: queryDto.courseDurationTo })
-        queryDto.feeFrom && qb.andWhere('course.fee >= :feeFrom', { feeFrom: queryDto.feeFrom })
-        queryDto.feeTo && qb.andWhere('course.fee <= :feeTo', { feeTo: queryDto.feeTo })
-        queryDto.currency && qb.andWhere('course.currency = :currency', { currency: queryDto.currency })
+        queryDto.min_duration && qb.andWhere('course.duration >= :min_duration', { min_duration: queryDto.min_duration })
+        queryDto.max_duration && qb.andWhere('course.duration <= :max_duration', { max_duration: queryDto.max_duration })
+        queryDto.min_fee && qb.andWhere('course.fee >= :min_fee', { min_fee: queryDto.min_fee })
+        queryDto.max_fee && qb.andWhere('course.fee <= :max_fee', { max_fee: queryDto.max_fee })
+        queryDto.university?.length && qb.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.university })
+        queryDto.country?.length && qb.andWhere('country.id IN (:...countryIds)', { countryIds: queryDto.country })
+        queryDto.grade12?.length && qb.andWhere('course.minGrade12Percentage >= :minGrade12Percentage', { minGrade12Percentage: queryDto.grade12 })
+        queryDto.ug?.length && qb.andWhere('course.minUgPercentage >= :minUgPercentage', { minUgPercentage: queryDto.ug })
+        queryDto.ielts?.length && qb.andWhere('course.ieltsMinScore >= :ieltsMinScore', { ieltsMinScore: queryDto.ielts })
+        queryDto.pte?.length && qb.andWhere('course.pteMinScore >= :pteMinScore', { pteMinScore: queryDto.pte })
       }))
 
     if (queryDto.intakes?.length) {
-      const intakeConditions = queryDto.intakes
-        .map(level => `FIND_IN_SET(:${level}, course.intakes)`)
-        .join(' OR ');
-      queryBuilder.andWhere(`(${intakeConditions})`, queryDto.intakes.reduce((params, level) => {
-        params[level] = level;
-        return params;
-      }, {}));
+      queryBuilder.andWhere('course.intakes && :intakes', { intakes: queryDto.intakes });
     }
 
     if (queryDto.requirements?.length) {
-      const programLevelConditions = queryDto.requirements
-        .map(level => `FIND_IN_SET(:${level}, course.requirements)`)
-        .join(' OR ');
-      queryBuilder.andWhere(`(${programLevelConditions})`, queryDto.requirements.reduce((params, level) => {
-        params[level] = level;
-        return params;
-      }, {}));
-    }
-
-    // filter by highest level of education
-    if (queryDto.highestLevelOfEducation) {
-      queryBuilder.andWhere('course.programLevel IN (:...highestLevelOfEducations)', { highestLevelOfEducations: programLevelByLevelOfEducation[queryDto.highestLevelOfEducation] })
+      queryBuilder.andWhere('course.requirements && :requirements', { requirements: queryDto.requirements });
     }
 
     queryBuilder.select([

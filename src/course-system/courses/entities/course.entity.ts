@@ -14,6 +14,7 @@ export class Course extends BaseEntity {
     @Column({ type: 'jsonb' })
     description: IRichText;
 
+    @Index()
     @ManyToOne(() => Category, category => category.courses, { onDelete: 'RESTRICT', nullable: false })
     category: Category;
 
