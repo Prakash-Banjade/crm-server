@@ -4,10 +4,11 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CheckAbilities } from 'src/common/decorators/abilities.decorator';
-import { Action, type AuthUser, Role } from 'src/common/types';
+import { Action, type AuthUser } from 'src/common/types';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { StudentQueryDto } from './dto/students-query.dto';
 import { Student } from './entities/student.entity';
+import { QueryDto } from 'src/common/dto/query.dto';
 
 @ApiBearerAuth()
 @ApiTags('Students')
@@ -27,6 +28,13 @@ export class StudentsController {
   @CheckAbilities({ subject: Student, action: Action.READ })
   findAll(@Query() queryDto: StudentQueryDto, @CurrentUser() currentUser: AuthUser) {
     return this.studentsService.findAll(queryDto, currentUser);
+  }
+
+  @Get('with-qualification')
+  @ApiOperation({ summary: 'Get students with qualification' })
+  @CheckAbilities({ subject: Student, action: Action.READ })
+  getStudentsWithQualification(@Query() queryDto: QueryDto) {
+    return this.studentsService.getStudentsWithQualification(queryDto);
   }
 
   @Get(':id')

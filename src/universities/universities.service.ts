@@ -91,6 +91,12 @@ export class UniversitiesService {
       "university.name as label",
     ]);
 
+    if (queryDto.withCourseCount) {
+      queryBuilder.leftJoin("university.courses", "course")
+        .addSelect("COUNT(course.id)", "count")
+        .groupBy("university.id");
+    }
+
     return paginatedRawData(queryDto, queryBuilder);
   }
 

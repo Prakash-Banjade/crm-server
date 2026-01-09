@@ -57,10 +57,10 @@ export class CoursesService {
         queryDto.max_fee && qb.andWhere('course.fee <= :max_fee', { max_fee: queryDto.max_fee })
         queryDto.university?.length && qb.andWhere('university.id IN (:...universityIds)', { universityIds: queryDto.university })
         queryDto.country?.length && qb.andWhere('country.id IN (:...countryIds)', { countryIds: queryDto.country })
-        queryDto.grade12?.length && qb.andWhere('course.minGrade12Percentage >= :minGrade12Percentage', { minGrade12Percentage: queryDto.grade12 })
-        queryDto.ug?.length && qb.andWhere('course.minUgPercentage >= :minUgPercentage', { minUgPercentage: queryDto.ug })
-        queryDto.ielts?.length && qb.andWhere('course.ieltsMinScore >= :ieltsMinScore', { ieltsMinScore: queryDto.ielts })
-        queryDto.pte?.length && qb.andWhere('course.pteMinScore >= :pteMinScore', { pteMinScore: queryDto.pte })
+        queryDto.grade12?.length && qb.andWhere('course.minGrade12Percentage <= :minGrade12Percentage', { minGrade12Percentage: queryDto.grade12 })
+        queryDto.ug?.length && qb.andWhere('course.minUgPercentage <= :minUgPercentage', { minUgPercentage: queryDto.ug })
+        queryDto.ielts?.length && qb.andWhere('course.ieltsMinScore <= :ieltsMinScore', { ieltsMinScore: queryDto.ielts })
+        queryDto.pte?.length && qb.andWhere('course.pteMinScore <= :pteMinScore', { pteMinScore: queryDto.pte })
       }))
 
     if (queryDto.intakes?.length) {

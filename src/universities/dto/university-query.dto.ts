@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsOptional, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsOptional, IsString, IsUUID } from "class-validator";
 import { QueryDto } from "src/common/dto/query.dto";
 
 const sortBy = {
@@ -24,4 +24,10 @@ export class UniversityQueryDto extends QueryDto {
     @IsString()
     @IsOptional()
     intake?: string;
+
+    @ApiPropertyOptional()
+    @IsBoolean()
+    @IsOptional()
+    @Transform(({ value }) => value === "true")
+    withCourseCount?: boolean = false;
 }

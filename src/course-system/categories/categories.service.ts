@@ -29,7 +29,7 @@ export class CategoriesService {
       .take(queryDto.take);
 
     if (queryDto.q) {
-      queryBuilder.andWhere('category.name ILIKE :q', { q: `${queryDto.q}%` });
+      queryBuilder.where('category.name ILIKE :q', { q: `${queryDto.q}%` });
     }
 
     queryBuilder.select([
@@ -54,7 +54,7 @@ export class CategoriesService {
       .limit(queryKey.take);
 
     if (queryKey.q) {
-      queryBuilder.andWhere('category.name ILIKE :q', { q: `${queryKey.q}%` });
+      queryBuilder.where('category.name ILIKE :q', { q: `${queryKey.q}%` });
     }
 
     queryBuilder.select([

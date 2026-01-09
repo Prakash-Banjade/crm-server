@@ -12,6 +12,7 @@ import { UpdateAccountDto } from 'src/auth-system/accounts/dto/update-account.dt
 import { Organization } from 'src/auth-system/organizations/entities/organization.entity';
 import { DEFAULT_ORGANIZATION_NAME } from 'src/common/CONSTANTS';
 import { BdesQueryDto } from './dto/bdes-query.dto';
+import { Account } from 'src/auth-system/accounts/entities/account.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BdeService extends BaseRepository {
@@ -110,9 +111,9 @@ export class BdeService extends BaseRepository {
   }
 
   async remove(id: string) {
-    const existing = await this.findOne(id);
-
-    await this.getRepository(Bde).remove(existing);
+    await this.getRepository(Account).delete({
+      bde: { id }
+    }); // deleting account auto deletes bde
 
     return { message: "BDE deleted successfully" };
   }

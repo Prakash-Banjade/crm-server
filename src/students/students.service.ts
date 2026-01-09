@@ -7,13 +7,14 @@ import { FindOptionsSelect, Repository } from 'typeorm';
 import { AuthUser, Role } from 'src/common/types';
 import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { StudentQueryDto } from './dto/students-query.dto';
-import paginatedData from 'src/utils/paginatedData';
+import paginatedData, { paginatedRawData } from 'src/utils/paginatedData';
 import { Account } from 'src/auth-system/accounts/entities/account.entity';
 import { StudentsHelperService } from './students-helper.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ENotificationEvent } from 'src/notification-system/notifications/notifications.service';
 import { CreateNotificationDto } from 'src/notification-system/notifications/dto/create-notification.dto';
 import { ENotificationType } from 'src/notification-system/notifications/entities/notification.entity';
+import { QueryDto } from 'src/common/dto/query.dto';
 
 @Injectable()
 export class StudentsService {
@@ -105,6 +106,77 @@ export class StudentsService {
     }
 
     return paginatedData(queryDto, queryBuilder);
+  }
+
+  getStudentsWithQualification(queryDto: QueryDto) {
+    const queryBuilder = this.studentsRepo.createQueryBuilder('student')
+      .orderBy("student.createdAt", queryDto.order)
+      .limit(queryDto.take)
+      .offset(queryDto.skip)
+      .where('student.academicQualification IS NOT NULL')
+
+    if (queryDto.q) {
+      queryBuilder.andWhere('student.fullName ILIKE :search', { search: `${queryDto.q}%` })
+    }
+
+    queryBuilder
+      .select('student.id', 'id')
+      .addSelect('student.fullName', 'fullName')
+      .addSelect(
+        `
+    jsonb_strip_nulls(
+      jsonb_build_object(
+        'postgraduate',
+          CASE
+            WHEN student."academicQualification"->'levelOfStudies'->'postgraduate' IS NOT NULL
+            THEN jsonb_build_object(
+              'gradingSystem',
+              student."academicQualification"->'levelOfStudies'->'postgraduate'->>'gradingSystem',
+              'score',
+              (student."academicQualification"->'levelOfStudies'->'postgraduate'->>'score')::numeric
+            )
+          END,
+
+        'undergraduate',
+          CASE
+            WHEN student."academicQualification"->'levelOfStudies'->'undergraduate' IS NOT NULL
+            THEN jsonb_build_object(
+              'gradingSystem',
+              student."academicQualification"->'levelOfStudies'->'undergraduate'->>'gradingSystem',
+              'score',
+              (student."academicQualification"->'levelOfStudies'->'undergraduate'->>'score')::numeric
+            )
+          END,
+
+        'grade_12',
+          CASE
+            WHEN student."academicQualification"->'levelOfStudies'->'grade_12' IS NOT NULL
+            THEN jsonb_build_object(
+              'gradingSystem',
+              student."academicQualification"->'levelOfStudies'->'grade_12'->>'gradingSystem',
+              'score',
+              (student."academicQualification"->'levelOfStudies'->'grade_12'->>'score')::numeric
+            )
+          END,
+
+        'grade_10',
+          CASE
+            WHEN student."academicQualification"->'levelOfStudies'->'grade_10' IS NOT NULL
+            THEN jsonb_build_object(
+              'gradingSystem',
+              student."academicQualification"->'levelOfStudies'->'grade_10'->>'gradingSystem',
+              'score',
+              (student."academicQualification"->'levelOfStudies'->'grade_10'->>'score')::numeric
+            )
+          END
+      )
+    )
+    `,
+        'levelOfStudies'
+      );
+
+
+    return paginatedRawData(queryDto, queryBuilder);
   }
 
   async findOne(id: string, currentUser: AuthUser, select?: FindOptionsSelect<Student>) {

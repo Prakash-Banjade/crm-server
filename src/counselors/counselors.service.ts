@@ -11,6 +11,7 @@ import paginatedData from 'src/utils/paginatedData';
 import { AccountsService } from 'src/auth-system/accounts/accounts.service';
 import { UpdateAccountDto } from 'src/auth-system/accounts/dto/update-account.dto';
 import { CounselorsQueryDto } from './dto/counselors-query.dto';
+import { Account } from 'src/auth-system/accounts/entities/account.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class CounselorsService extends BaseRepository {
@@ -143,9 +144,16 @@ export class CounselorsService extends BaseRepository {
   }
 
   async remove(id: string, currentUser: AuthUser) {
-    const existing = await this.findOne(id, currentUser);
-
-    await this.getRepository(Counselor).remove(existing);
+    await this.getRepository(Account).delete({
+      counselor: {
+        id,
+        account: {
+          organization: {
+            id: currentUser.role === Role.SUPER_ADMIN ? undefined : currentUser.organizationId
+          }
+        }
+      }
+    }); // deleting account auto deletes counselor
 
     return { message: "Counselor deleted successfully" };
   }
